@@ -1,0 +1,17 @@
+name: activity-66
+
+services:
+  portal:
+    image: ${PORTAL_IMAGE:?PORTAL_IMAGE is required}
+    container_name: activity-66-portal
+    restart: unless-stopped
+    pull_policy: never
+    ports:
+      - "${HTTP_BIND:-0.0.0.0}:${HTTP_PORT:-80}:80"
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

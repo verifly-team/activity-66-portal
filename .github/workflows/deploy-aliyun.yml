@@ -1,4 +1,4 @@
-name: Deploy activity-66 portal to Aliyun
+name: Deploy activity-66 portal image to Aliyun
 
 on:
   push:
@@ -25,10 +25,9 @@ jobs:
           ALIYUN_HOST: ${{ secrets.ALIYUN_HOST }}
           ALIYUN_USER: ${{ secrets.ALIYUN_USER }}
           ALIYUN_SSH_KEY: ${{ secrets.ALIYUN_SSH_KEY }}
-          SITE_HOST: ${{ vars.ALIYUN_SITE_HOST }}
         run: |
           set -euo pipefail
-          if [[ -n "${ALIYUN_HOST:-}" && -n "${ALIYUN_USER:-}" && -n "${ALIYUN_SSH_KEY:-}" && -n "${SITE_HOST:-}" ]]; then
+          if [[ -n "${ALIYUN_HOST:-}" && -n "${ALIYUN_USER:-}" && -n "${ALIYUN_SSH_KEY:-}" ]]; then
             echo "configured=true" >> "$GITHUB_OUTPUT"
           else
             echo "configured=false" >> "$GITHUB_OUTPUT"
@@ -69,18 +68,10 @@ jobs:
           path: dist/
           retention-days: 7
 
-  deploy:
-    needs: [preflight, build]
-    if: needs.preflight.outputs.configured == 'true'
+  validate-image:
+    needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    env:
-      ALIYUN_HOST: ${{ secrets.ALIYUN_HOST }}
-      ALIYUN_USER: ${{ secrets.ALIYUN_USER }}
-      SSH_PORT: ${{ secrets.ALIYUN_PORT || '22' }}
-      APP_DIR: ${{ vars.ALIYUN_APP_DIR || '/var/www/activity-66' }}
-      SITE_HOST: ${{ vars.ALIYUN_SITE_HOST || '' }}
-      HEALTHCHECK_URL: ${{ vars.ALIYUN_HEALTHCHECK_URL || '' }}
+    timeout-minutes: 10
 
     steps:
       - name: Checkout
@@ -92,14 +83,78 @@ jobs:
           name: activity-66-dist-${{ github.sha }}
           path: dist
 
-      - name: Validate deployment settings
+      - name: Build Docker image
+        run: |
+          docker build \
+            --platform linux/amd64 \
+            --build-arg "REVISION=$GITHUB_SHA" \
+            --file deploy/docker/Dockerfile \
+            --tag activity-66-portal:ci \
+            .
+
+      - name: Smoke test Docker image
         run: |
           set -euo pipefail
-          : "${ALIYUN_HOST:?ALIYUN_HOST is required}"
-          : "${ALIYUN_USER:?ALIYUN_USER is required}"
-          : "${SITE_HOST:?Set ALIYUN_SITE_HOST to the domain or IP served by nginx}"
-          [[ "$APP_DIR" =~ ^/[A-Za-z0-9._/-]+$ ]] || { echo "ALIYUN_APP_DIR must be a simple absolute path" >&2; exit 1; }
-          [[ "$SITE_HOST" =~ ^[A-Za-z0-9._:-]+$ ]] || { echo "ALIYUN_SITE_HOST contains unsupported characters" >&2; exit 1; }
+          docker run --detach --name activity-66-ci \
+            --publish 127.0.0.1:18080:80 \
+            activity-66-portal:ci
+          for attempt in {1..30}; do
+            if curl -fsS --max-time 5 http://127.0.0.1:18080/app.html >/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          asset="$(
+            curl -fsS http://127.0.0.1:18080/app.html \
+              | grep -oE '\./assets/[^"]+' \
+              | head -n 1 \
+              | sed 's#^\./##'
+          )"
+          test -n "$asset"
+          curl -fsS "http://127.0.0.1:18080/$asset" >/dev/null
+          for attempt in {1..30}; do
+            health="$(docker inspect --format '{{.State.Health.Status}}' activity-66-ci)"
+            if [[ "$health" == "healthy" ]]; then
+              break
+            fi
+            if [[ "$health" == "unhealthy" ]]; then
+              docker logs activity-66-ci
+              exit 1
+            fi
+            sleep 2
+          done
+          test "$(docker inspect --format '{{.State.Health.Status}}' activity-66-ci)" = "healthy"
+
+      - name: Remove smoke-test container
+        if: always()
+        run: docker rm --force activity-66-ci || true
+
+  deploy:
+    needs: [preflight, build, validate-image]
+    if: needs.preflight.outputs.configured == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ALIYUN_HOST: ${{ secrets.ALIYUN_HOST }}
+      ALIYUN_USER: ${{ secrets.ALIYUN_USER }}
+      ALIYUN_PORT: ${{ secrets.ALIYUN_PORT || '22' }}
+      ALIYUN_APP_DIR: ${{ vars.ALIYUN_APP_DIR || '/opt/activity-66' }}
+      ALIYUN_HTTP_PORT: ${{ vars.ALIYUN_HTTP_PORT || '80' }}
+      ALIYUN_HTTP_BIND: ${{ vars.ALIYUN_HTTP_BIND || '0.0.0.0' }}
+      ALIYUN_HEALTHCHECK_URL: ${{ vars.ALIYUN_HEALTHCHECK_URL || '' }}
+      ALIYUN_DOCKER_PLATFORM: ${{ vars.ALIYUN_DOCKER_PLATFORM || 'linux/amd64' }}
+      KEEP_IMAGES: "3"
+      SSH_STRICT_HOST_CHECKING: "yes"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: activity-66-dist-${{ github.sha }}
+          path: dist
 
       - name: Configure SSH
         env:
@@ -115,48 +170,17 @@ jobs:
           if [ -n "${KNOWN_HOSTS:-}" ]; then
             printf '%s\n' "$KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
           else
-            ssh-keyscan -T 10 -p "$SSH_PORT" -H "$ALIYUN_HOST" > "$HOME/.ssh/known_hosts"
+            ssh-keyscan -T 10 -p "$ALIYUN_PORT" -H "$ALIYUN_HOST" > "$HOME/.ssh/known_hosts"
           fi
           chmod 600 "$HOME/.ssh/known_hosts"
           test -s "$HOME/.ssh/known_hosts"
 
-      - name: Upload release
-        run: |
-          set -euo pipefail
-          : "${ALIYUN_USER:?ALIYUN_USER is required}"
-          RELEASE="$(date -u +%Y%m%d%H%M%S)-${GITHUB_RUN_ID}"
-          echo "RELEASE=$RELEASE" >> "$GITHUB_ENV"
-          SSH_OPTS=(
-            -p "$SSH_PORT"
-            -i "$HOME/.ssh/activity_66_deploy"
-            -o IdentitiesOnly=yes
-            -o BatchMode=yes
-            -o ConnectTimeout=15
-            -o StrictHostKeyChecking=yes
-          )
-          ssh "${SSH_OPTS[@]}" "$ALIYUN_USER@$ALIYUN_HOST" \
-            "mkdir -p '$APP_DIR/releases/$RELEASE'"
-          rsync -az --delete --chmod=D755,F644 \
-            -e "ssh ${SSH_OPTS[*]}" \
-            dist/ "$ALIYUN_USER@$ALIYUN_HOST:$APP_DIR/releases/$RELEASE/"
-
-      - name: Activate release
-        env:
-          KEEP_RELEASES: "5"
-        run: |
-          set -euo pipefail
-          : "${ALIYUN_USER:?ALIYUN_USER is required}"
-          : "${SITE_HOST:?Set ALIYUN_SITE_HOST to the domain or IP served by nginx}"
-          : "${RELEASE:?RELEASE is required}"
-          ssh -p "$SSH_PORT" -i "$HOME/.ssh/activity_66_deploy" \
-            -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=yes \
-            "$ALIYUN_USER@$ALIYUN_HOST" \
-            "APP_DIR='$APP_DIR' SITE_HOST='$SITE_HOST' HEALTHCHECK_URL='$HEALTHCHECK_URL' KEEP_RELEASES='$KEEP_RELEASES' bash -s -- '$RELEASE'" \
-            < deploy/activate-release.sh
+      - name: Build and deploy Docker image
+        run: bash deploy/deploy-docker-image.sh
 
       - name: Write deployment summary
         run: |
-          echo "### activity-66 portal deployed" >> "$GITHUB_STEP_SUMMARY"
+          echo "### activity-66 portal image deployed" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Release: \`$RELEASE\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Directory: \`$APP_DIR/current\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Image: \`${PORTAL_IMAGE:-unknown}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Compose directory: \`${ALIYUN_APP_DIR}\`" >> "$GITHUB_STEP_SUMMARY"
