@@ -6,13 +6,19 @@
 
 ```text
 push main / 手动运行
+  -> 检查阿里云部署配置
   -> npm ci
   -> npm run build
+  -> 上传 dist 构建产物
   -> rsync dist/ 到 ECS 的 releases/<release>
   -> 追加 assets 到 shared/assets
   -> 切换 current 软链
   -> nginx 立即读取新版本
 ```
+
+每次提交都会完成构建并保留 7 天的 Actions 构建产物。阿里云部署所需的
+Secrets / Variables 没有配置完整时，构建仍会通过，部署任务会明确标记为
+跳过；配置完成后会自动恢复部署，也可以手动运行。
 
 线上只发布 `dist/`。根目录的 `index.html` 是 `file://` 预览产物，不是线上入口，已经加入 `.gitignore`。
 

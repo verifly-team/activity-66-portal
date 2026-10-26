@@ -13,29 +13,35 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  preflight:
+    runs-on: ubuntu-latest
+    outputs:
+      configured: ${{ steps.check.outputs.configured }}
+
+    steps:
+      - name: Check Aliyun deployment configuration
+        id: check
+        env:
+          ALIYUN_HOST: ${{ secrets.ALIYUN_HOST }}
+          ALIYUN_USER: ${{ secrets.ALIYUN_USER }}
+          ALIYUN_SSH_KEY: ${{ secrets.ALIYUN_SSH_KEY }}
+          SITE_HOST: ${{ vars.ALIYUN_SITE_HOST }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${ALIYUN_HOST:-}" && -n "${ALIYUN_USER:-}" && -n "${ALIYUN_SSH_KEY:-}" && -n "${SITE_HOST:-}" ]]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Aliyun deployment skipped::Configure the Aliyun Actions secrets and variables to enable deployment."
+          fi
+
+  build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      ALIYUN_HOST: ${{ secrets.ALIYUN_HOST }}
-      ALIYUN_USER: ${{ secrets.ALIYUN_USER }}
-      SSH_PORT: ${{ secrets.ALIYUN_PORT || '22' }}
-      APP_DIR: ${{ vars.ALIYUN_APP_DIR || '/var/www/activity-66' }}
-      SITE_HOST: ${{ vars.ALIYUN_SITE_HOST || '' }}
-      HEALTHCHECK_URL: ${{ vars.ALIYUN_HEALTHCHECK_URL || '' }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Validate deployment settings
-        run: |
-          set -euo pipefail
-          : "${ALIYUN_HOST:?ALIYUN_HOST is required}"
-          : "${ALIYUN_USER:?ALIYUN_USER is required}"
-          : "${SITE_HOST:?Set ALIYUN_SITE_HOST to the domain or IP served by nginx}"
-          [[ "$APP_DIR" =~ ^/[A-Za-z0-9._/-]+$ ]] || { echo "ALIYUN_APP_DIR must be a simple absolute path" >&2; exit 1; }
-          [[ "$SITE_HOST" =~ ^[A-Za-z0-9._:-]+$ ]] || { echo "ALIYUN_SITE_HOST contains unsupported characters" >&2; exit 1; }
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -55,6 +61,45 @@ jobs:
           test -f dist/app.html
           test -n "$(find dist/assets -maxdepth 1 -name '*.js' -print -quit)"
           printf '%s\n' "$GITHUB_SHA" > dist/REVISION
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: activity-66-dist-${{ github.sha }}
+          path: dist/
+          retention-days: 7
+
+  deploy:
+    needs: [preflight, build]
+    if: needs.preflight.outputs.configured == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ALIYUN_HOST: ${{ secrets.ALIYUN_HOST }}
+      ALIYUN_USER: ${{ secrets.ALIYUN_USER }}
+      SSH_PORT: ${{ secrets.ALIYUN_PORT || '22' }}
+      APP_DIR: ${{ vars.ALIYUN_APP_DIR || '/var/www/activity-66' }}
+      SITE_HOST: ${{ vars.ALIYUN_SITE_HOST || '' }}
+      HEALTHCHECK_URL: ${{ vars.ALIYUN_HEALTHCHECK_URL || '' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: activity-66-dist-${{ github.sha }}
+          path: dist
+
+      - name: Validate deployment settings
+        run: |
+          set -euo pipefail
+          : "${ALIYUN_HOST:?ALIYUN_HOST is required}"
+          : "${ALIYUN_USER:?ALIYUN_USER is required}"
+          : "${SITE_HOST:?Set ALIYUN_SITE_HOST to the domain or IP served by nginx}"
+          [[ "$APP_DIR" =~ ^/[A-Za-z0-9._/-]+$ ]] || { echo "ALIYUN_APP_DIR must be a simple absolute path" >&2; exit 1; }
+          [[ "$SITE_HOST" =~ ^[A-Za-z0-9._:-]+$ ]] || { echo "ALIYUN_SITE_HOST contains unsupported characters" >&2; exit 1; }
 
       - name: Configure SSH
         env:
