@@ -1,0 +1,36 @@
+# Use this as a host nginx server block, or adapt it for the existing
+# nginx container. Add listen 443 ssl and certificate directives if needed.
+server {
+    listen 80;
+    server_name activity.example.com;
+
+    root /var/www/activity-66/current;
+    index app.html;
+
+    charset utf-8;
+    gzip on;
+    gzip_min_length 1024;
+    gzip_types
+        text/plain
+        text/css
+        application/javascript
+        text/javascript
+        application/json
+        image/svg+xml;
+
+    location = /app.html {
+        add_header Cache-Control "no-cache";
+        try_files $uri =404;
+    }
+
+    location /assets/ {
+        # Keep old hashed assets available for pages loaded before a deploy.
+        root /var/www/activity-66/shared;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        try_files $uri =404;
+    }
+
+    location / {
+        try_files $uri $uri/ /app.html;
+    }
+}

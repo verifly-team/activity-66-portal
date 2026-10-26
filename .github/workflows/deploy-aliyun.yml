@@ -1,0 +1,117 @@
+name: Deploy activity-66 portal to Aliyun
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: activity-66-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ALIYUN_HOST: ${{ secrets.ALIYUN_HOST }}
+      ALIYUN_USER: ${{ secrets.ALIYUN_USER }}
+      SSH_PORT: ${{ secrets.ALIYUN_PORT || '22' }}
+      APP_DIR: ${{ vars.ALIYUN_APP_DIR || '/var/www/activity-66' }}
+      SITE_HOST: ${{ vars.ALIYUN_SITE_HOST || '' }}
+      HEALTHCHECK_URL: ${{ vars.ALIYUN_HEALTHCHECK_URL || '' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate deployment settings
+        run: |
+          set -euo pipefail
+          : "${ALIYUN_HOST:?ALIYUN_HOST is required}"
+          : "${ALIYUN_USER:?ALIYUN_USER is required}"
+          : "${SITE_HOST:?Set ALIYUN_SITE_HOST to the domain or IP served by nginx}"
+          [[ "$APP_DIR" =~ ^/[A-Za-z0-9._/-]+$ ]] || { echo "ALIYUN_APP_DIR must be a simple absolute path" >&2; exit 1; }
+          [[ "$SITE_HOST" =~ ^[A-Za-z0-9._:-]+$ ]] || { echo "ALIYUN_SITE_HOST contains unsupported characters" >&2; exit 1; }
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build static site
+        run: npm run build
+
+      - name: Verify build output
+        run: |
+          set -euo pipefail
+          test -f dist/app.html
+          test -n "$(find dist/assets -maxdepth 1 -name '*.js' -print -quit)"
+          printf '%s\n' "$GITHUB_SHA" > dist/REVISION
+
+      - name: Configure SSH
+        env:
+          SSH_KEY: ${{ secrets.ALIYUN_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.ALIYUN_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          : "${ALIYUN_HOST:?ALIYUN_HOST is required}"
+          : "${SSH_KEY:?ALIYUN_SSH_KEY is required}"
+          install -m 700 -d "$HOME/.ssh"
+          printf '%s\n' "$SSH_KEY" > "$HOME/.ssh/activity_66_deploy"
+          chmod 600 "$HOME/.ssh/activity_66_deploy"
+          if [ -n "${KNOWN_HOSTS:-}" ]; then
+            printf '%s\n' "$KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          else
+            ssh-keyscan -T 10 -p "$SSH_PORT" -H "$ALIYUN_HOST" > "$HOME/.ssh/known_hosts"
+          fi
+          chmod 600 "$HOME/.ssh/known_hosts"
+          test -s "$HOME/.ssh/known_hosts"
+
+      - name: Upload release
+        run: |
+          set -euo pipefail
+          : "${ALIYUN_USER:?ALIYUN_USER is required}"
+          RELEASE="$(date -u +%Y%m%d%H%M%S)-${GITHUB_RUN_ID}"
+          echo "RELEASE=$RELEASE" >> "$GITHUB_ENV"
+          SSH_OPTS=(
+            -p "$SSH_PORT"
+            -i "$HOME/.ssh/activity_66_deploy"
+            -o IdentitiesOnly=yes
+            -o BatchMode=yes
+            -o ConnectTimeout=15
+            -o StrictHostKeyChecking=yes
+          )
+          ssh "${SSH_OPTS[@]}" "$ALIYUN_USER@$ALIYUN_HOST" \
+            "mkdir -p '$APP_DIR/releases/$RELEASE'"
+          rsync -az --delete --chmod=D755,F644 \
+            -e "ssh ${SSH_OPTS[*]}" \
+            dist/ "$ALIYUN_USER@$ALIYUN_HOST:$APP_DIR/releases/$RELEASE/"
+
+      - name: Activate release
+        env:
+          KEEP_RELEASES: "5"
+        run: |
+          set -euo pipefail
+          : "${ALIYUN_USER:?ALIYUN_USER is required}"
+          : "${SITE_HOST:?Set ALIYUN_SITE_HOST to the domain or IP served by nginx}"
+          : "${RELEASE:?RELEASE is required}"
+          ssh -p "$SSH_PORT" -i "$HOME/.ssh/activity_66_deploy" \
+            -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=yes \
+            "$ALIYUN_USER@$ALIYUN_HOST" \
+            "APP_DIR='$APP_DIR' SITE_HOST='$SITE_HOST' HEALTHCHECK_URL='$HEALTHCHECK_URL' KEEP_RELEASES='$KEEP_RELEASES' bash -s -- '$RELEASE'" \
+            < deploy/activate-release.sh
+
+      - name: Write deployment summary
+        run: |
+          echo "### activity-66 portal deployed" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Release: \`$RELEASE\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Directory: \`$APP_DIR/current\`" >> "$GITHUB_STEP_SUMMARY"
