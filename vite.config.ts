@@ -5,7 +5,7 @@ export default defineConfig({
   base: "./",
   plugins: [react()],
   build: {
-    assetsInlineLimit: 100_000_000,
+    assetsInlineLimit: 4096,
     rollupOptions: {
       input: "app.html",
     },

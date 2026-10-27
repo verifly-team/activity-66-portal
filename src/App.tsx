@@ -91,6 +91,7 @@ function App() {
             <source media="(min-width: 900px)" srcSet={campaignDesktop} />
             <img
               src={campaignMobile}
+              fetchPriority="high"
               alt="66th & 2nd Ave. Vintage Fashion Market，2026.12.25 至 27，深圳华侨城创意文化园北区 C2 展厅"
             />
           </picture>
@@ -155,6 +156,8 @@ function App() {
             <source media="(min-width: 900px)" srcSet={marketPlanDesktop} />
             <img
               src={marketPlanMobile}
+              loading="lazy"
+              decoding="async"
               alt="Vintage Market 场地图，包含 A、B、C 摊位区、美食区和入口"
             />
           </picture>
@@ -213,6 +216,8 @@ function App() {
             <source media="(min-width: 900px)" srcSet={fashionShowDesktop} />
             <img
               src={fashionShowMobile}
+              loading="lazy"
+              decoding="async"
               alt="Vintage Fashion Show，2026 年 12 月 25 日至 27 日每天 14:00 至 14:30"
             />
           </picture>
@@ -294,10 +299,18 @@ function App() {
             <p>合作伙伴</p>
           </div>
           <div className="support__logos">
-            <img className="support__logo" src={supportLogo} alt="善淘 BUY 42" />
+            <img
+              className="support__logo"
+              src={supportLogo}
+              loading="lazy"
+              decoding="async"
+              alt="善淘 BUY 42"
+            />
             <img
               className="support__logo support__logo--partner"
               src={coomenLogo}
+              loading="lazy"
+              decoding="async"
               alt="粗门"
             />
           </div>
