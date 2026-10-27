@@ -129,6 +129,60 @@ jobs:
         if: always()
         run: docker rm --force activity-66-ci || true
 
+  validate-flow-image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Flow image from source
+        run: |
+          docker build \
+            --platform linux/amd64 \
+            --build-arg "REVISION=$GITHUB_SHA" \
+            --file deploy/flow/Dockerfile \
+            --tag activity-66-portal:flow-ci \
+            .
+
+      - name: Smoke test Flow image
+        run: |
+          set -euo pipefail
+          docker run --detach --name activity-66-flow-ci \
+            --publish 127.0.0.1:18081:80 \
+            activity-66-portal:flow-ci
+          for attempt in {1..60}; do
+            if curl -fsS --max-time 5 http://127.0.0.1:18081/app.html >/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          asset="$(
+            curl -fsS http://127.0.0.1:18081/app.html \
+              | grep -oE '\./assets/[^"]+' \
+              | head -n 1 \
+              | sed 's#^\./##'
+          )"
+          test -n "$asset"
+          curl -fsS "http://127.0.0.1:18081/$asset" >/dev/null
+          for attempt in {1..30}; do
+            health="$(docker inspect --format '{{.State.Health.Status}}' activity-66-flow-ci)"
+            if [[ "$health" == "healthy" ]]; then
+              break
+            fi
+            if [[ "$health" == "unhealthy" ]]; then
+              docker logs activity-66-flow-ci
+              exit 1
+            fi
+            sleep 2
+          done
+          test "$(docker inspect --format '{{.State.Health.Status}}' activity-66-flow-ci)" = "healthy"
+
+      - name: Remove smoke-test container
+        if: always()
+        run: docker rm --force activity-66-flow-ci || true
+
   deploy:
     needs: [preflight, build, validate-image]
     if: needs.preflight.outputs.configured == 'true'

@@ -5,6 +5,9 @@
 
 不使用阿里云 ACR，因此不需要 Registry 地址、命名空间或镜像仓库密码。
 
+需要走云效 Flow（ACR + 主机组，不开放公网 SSH）时，见
+[`flow/README.md`](./flow/README.md)。
+
 ```text
 push main / 手动运行
   -> npm ci
