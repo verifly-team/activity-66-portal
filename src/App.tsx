@@ -1,6 +1,3 @@
-import brand from "./assets/figma-2026-10/brand.png";
-import campaignDesktop from "./assets/figma-2026-10/campaign-desktop.png";
-import campaignMobile from "./assets/figma-2026-10/campaign-mobile.png";
 import coomenLogo from "./assets/figma-2026-10/coomen-logo.png";
 import fashionShowDesktop from "./assets/figma-2026-10/fashion-show-desktop.png";
 import fashionShowMobile from "./assets/figma-2026-10/fashion-show-mobile.png";
@@ -8,6 +5,12 @@ import locationTarget from "./assets/figma-2026-10/location-target.svg";
 import marketPlanDesktop from "./assets/figma-2026-10/market-plan-desktop.png";
 import marketPlanMobile from "./assets/figma-2026-10/market-plan-mobile.png";
 import supportLogo from "./assets/figma-2026-10/support-logo.png";
+import brandFallback from "./assets/optimized/brand.png";
+import brandWebp from "./assets/optimized/brand.webp";
+import campaignDesktopFallback from "./assets/optimized/campaign-desktop.png";
+import campaignDesktopWebp from "./assets/optimized/campaign-desktop.webp";
+import campaignMobileFallback from "./assets/optimized/campaign-mobile.png";
+import campaignMobileWebp from "./assets/optimized/campaign-mobile.webp";
 
 const workshopItems = [
   {
@@ -59,7 +62,10 @@ function App() {
       <header className="site-header">
         <div className="site-header__bar">
           <a className="brand" href="#top" aria-label="66th & 2nd Ave. 首页">
-            <img src={brand} alt="66th & 2nd Ave. Vintage Fashion Market" />
+            <picture>
+              <source type="image/webp" srcSet={brandWebp} />
+              <img src={brandFallback} alt="66th & 2nd Ave. Vintage Fashion Market" />
+            </picture>
           </a>
 
           <nav className="desktop-nav" aria-label="主导航">
@@ -88,9 +94,17 @@ function App() {
       <main>
         <section className="campaign" aria-label="活动主视觉">
           <picture>
-            <source media="(min-width: 900px)" srcSet={campaignDesktop} />
+            <source
+              type="image/webp"
+              media="(min-width: 900px)"
+              srcSet={campaignDesktopWebp}
+            />
+            <source type="image/webp" srcSet={campaignMobileWebp} />
+            <source media="(min-width: 900px)" srcSet={campaignDesktopFallback} />
             <img
-              src={campaignMobile}
+              src={campaignMobileFallback}
+              width="1170"
+              height="1651"
               fetchPriority="high"
               alt="66th & 2nd Ave. Vintage Fashion Market，2026.12.25 至 27，深圳华侨城创意文化园北区 C2 展厅"
             />

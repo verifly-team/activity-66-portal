@@ -61,7 +61,8 @@ dd {
 }
 
 .site {
-  width: min(100%, 1440px);
+  width: 100%;
+  max-width: 1440px;
   min-height: 100vh;
   margin: 0 auto;
   overflow: hidden;
@@ -98,6 +99,12 @@ dd {
   display: block;
   width: 78px;
   height: 48px;
+}
+
+.brand picture {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .brand img {
@@ -146,9 +153,8 @@ dd {
 }
 
 .campaign img {
-  aspect-ratio: 390 / 544;
-  object-fit: cover;
-  object-position: center;
+  width: 100%;
+  height: auto;
 }
 
 .quick-ticket {
@@ -266,7 +272,8 @@ dd {
 
 .placeholder-grid span {
   display: block;
-  aspect-ratio: 90 / 83.75;
+  height: 0;
+  padding-bottom: 93.0556%;
   border-radius: 12px;
   background: var(--blue);
 }
@@ -675,7 +682,6 @@ dd {
 
   .campaign img {
     height: 756px;
-    aspect-ratio: auto;
     object-fit: fill;
     object-position: center;
   }
@@ -754,7 +760,7 @@ dd {
   }
 
   .placeholder-grid.placeholder-grid--desktop span {
-    aspect-ratio: 1;
+    padding-bottom: 100%;
   }
 
   .view-more {

@@ -5,6 +5,8 @@ export default defineConfig({
   base: "./",
   plugins: [react()],
   build: {
+    target: ["es2015", "safari11"],
+    cssTarget: "safari11",
     assetsInlineLimit: 4096,
     rollupOptions: {
       input: "app.html",
