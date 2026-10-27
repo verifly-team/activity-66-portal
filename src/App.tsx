@@ -1,6 +1,7 @@
 import brand from "./assets/figma-2026-10/brand.png";
 import campaignDesktop from "./assets/figma-2026-10/campaign-desktop.png";
 import campaignMobile from "./assets/figma-2026-10/campaign-mobile.png";
+import coomenLogo from "./assets/figma-2026-10/coomen-logo.png";
 import fashionShowDesktop from "./assets/figma-2026-10/fashion-show-desktop.png";
 import fashionShowMobile from "./assets/figma-2026-10/fashion-show-mobile.png";
 import locationTarget from "./assets/figma-2026-10/location-target.svg";
@@ -292,7 +293,14 @@ function App() {
             <h2 id="support-title">Supported By</h2>
             <p>合作伙伴</p>
           </div>
-          <img className="support__logo" src={supportLogo} alt="善淘 BUY 42" />
+          <div className="support__logos">
+            <img className="support__logo" src={supportLogo} alt="善淘 BUY 42" />
+            <img
+              className="support__logo support__logo--partner"
+              src={coomenLogo}
+              alt="粗门"
+            />
+          </div>
         </section>
       </main>
     </div>

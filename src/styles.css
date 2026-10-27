@@ -383,7 +383,8 @@ dd {
 }
 
 .fashion {
-  gap: 92px;
+  align-content: start;
+  gap: 94px;
   min-height: 569px;
   padding: 64px 20px;
 }
@@ -409,7 +410,7 @@ dd {
   width: min(267px, 100%);
   height: 245px;
   align-items: center;
-  gap: 32px;
+  gap: 20px;
   padding-inline: 22px;
   background: var(--white);
   color: var(--ink);
@@ -569,6 +570,7 @@ dd {
 
 .support {
   display: grid;
+  align-content: start;
   gap: 48px;
   min-height: 569px;
   padding: 64px 20px;
@@ -590,11 +592,26 @@ dd {
   text-align: center;
 }
 
-.support__logo {
-  width: 58px;
+.support__logos {
+  position: relative;
+  width: 235px;
   height: 82px;
   margin-right: auto;
+}
+
+.support__logo {
+  display: block;
+  width: 58px;
+  height: 82px;
   object-fit: contain;
+}
+
+.support__logo--partner {
+  position: absolute;
+  top: 19px;
+  left: 114px;
+  width: 121px;
+  height: 44px;
 }
 
 @media (min-width: 600px) and (max-width: 899px) {
@@ -609,10 +626,6 @@ dd {
   .venue,
   .support {
     padding-inline: 32px;
-  }
-
-  .campaign img {
-    max-height: 760px;
   }
 
   .placeholder-grid {
@@ -671,7 +684,7 @@ dd {
     align-content: start;
     gap: 56px;
     min-height: 870px;
-    padding: 100px 0;
+    padding: 85px 0 100px;
   }
 
   .about h2 {
@@ -701,11 +714,11 @@ dd {
 
   .market {
     gap: 58px;
-    padding: 0 0 112px;
+    padding: 0 0 119px;
   }
 
   .market__intro {
-    gap: 58px;
+    gap: 79px;
     min-height: 273px;
     align-content: start;
   }
@@ -728,6 +741,7 @@ dd {
   .market__group {
     gap: 93px;
     padding-block: 28px 19px;
+    margin-top: -14px;
   }
 
   .placeholder-grid.placeholder-grid--desktop {
@@ -750,12 +764,13 @@ dd {
 
   .market-plan {
     width: min(1050px, calc(100% - 96px));
-    margin: 0 auto;
+    margin: 19px auto 0;
   }
 
   .food-area {
-    gap: 33px;
-    min-height: 594px;
+    gap: 47px;
+    min-height: 445px;
+    margin-top: 104px;
     align-content: start;
   }
 
@@ -764,9 +779,10 @@ dd {
   }
 
   .workshop {
-    gap: 126px;
+    align-content: start;
+    gap: 132px;
     min-height: 914px;
-    padding: 96px 0;
+    padding: 91px 0 101px;
     background: var(--pink);
   }
 
@@ -779,13 +795,15 @@ dd {
 
   .workshop-list {
     width: min(636px, calc(100% - 96px));
-    gap: 28px;
+    gap: 36px;
     margin: 0 auto;
   }
 
   .workshop-item {
     justify-items: center;
-    gap: 12px;
+    align-content: start;
+    gap: 19px;
+    padding-bottom: 10px;
     text-align: center;
   }
 
@@ -810,21 +828,26 @@ dd {
 
   .workshop-item:first-child::before {
     content: "";
-    height: 34px;
+    height: 26px;
   }
 
   .fashion {
     gap: 48px;
     min-height: 928px;
     padding: 96px 48px;
+    align-content: start;
     background: var(--blue);
   }
 
   .fashion__intro {
     gap: 0;
+    min-height: 182px;
+    align-content: start;
   }
 
   .fashion h2 {
+    position: relative;
+    top: -5px;
     text-transform: uppercase;
   }
 
@@ -834,13 +857,13 @@ dd {
   }
 
   .visit {
-    gap: 42px;
-    padding: 112px 0;
+    gap: 39px;
+    padding: 112px 0 119px;
     background: var(--white);
   }
 
   .visit__intro {
-    gap: 24px;
+    gap: 39px;
   }
 
   .visit__intro > p {
@@ -852,18 +875,17 @@ dd {
   }
 
   .ticket-card {
-    margin-top: 24px;
+    margin-top: 2px;
     background: var(--sage);
     color: var(--white);
     font-family: var(--display);
     font-size: 10px;
+    gap: 32px;
     white-space: nowrap;
   }
 
   .event-meta {
-    width: min(640px, calc(100% - 96px));
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 48px;
+    display: none;
   }
 
   .event-meta div {
@@ -876,8 +898,8 @@ dd {
 
   .venue {
     align-items: center;
-    gap: 48px;
-    padding: 0 0 112px;
+    gap: 0;
+    padding: 0 0 99px;
   }
 
   .venue__rule {
@@ -888,6 +910,7 @@ dd {
     order: 1;
     width: min(900px, calc(100% - 96px));
     padding-top: 16px;
+    gap: 37px;
   }
 
   .venue__address h2 {
@@ -899,6 +922,7 @@ dd {
     width: 774px;
     max-width: calc(100% - 96px);
     height: 430px;
+    margin-top: 30px;
     padding: 28px;
   }
 
@@ -917,12 +941,17 @@ dd {
   .venue__transport {
     order: 3;
     width: min(900px, calc(100% - 96px));
+    margin-top: 174px;
+  }
+
+  .venue__transport > .venue__label {
+    display: none;
   }
 
   .support {
-    gap: 48px;
+    gap: 104px;
     min-height: 842px;
-    padding: 96px 0;
+    padding: 92px 0 100px;
   }
 
   .support__intro {
@@ -937,10 +966,23 @@ dd {
     text-transform: uppercase;
   }
 
+  .support__logos {
+    width: 795px;
+    height: 182px;
+    margin-left: max(25px, calc((100% - 795px) / 2 + 25px));
+    transform: translateY(3px);
+  }
+
   .support__logo {
     width: 129px;
     height: 182px;
-    margin-left: max(25px, calc((100% - 795px) / 2 + 25px));
+  }
+
+  .support__logo--partner {
+    top: 35px;
+    left: 259px;
+    width: 228px;
+    height: 83px;
   }
 }
 
