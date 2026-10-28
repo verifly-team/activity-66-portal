@@ -19,6 +19,8 @@ const MAX_FILE_MB = 3;
 const MAX_TOTAL_MB = 30;
 const MAX_FILE_BYTES = MAX_FILE_MB * 1024 * 1024;
 const MAX_TOTAL_BYTES = MAX_TOTAL_MB * 1024 * 1024;
+const UPLOAD_TIMEOUT_MS = 120_000;
+const SUBMIT_TIMEOUT_MS = 180_000;
 const ALLOWED_EXT = ["jpg", "jpeg", "png", "webp", "heic", "pdf", "zip"];
 const PHONE_RE = /^1[3-9]\d{9}$/;
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/;
@@ -293,6 +295,34 @@ function readApiMessage(data: unknown, fallback: string) {
   return fallback;
 }
 
+class RequestTimeoutError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "RequestTimeoutError";
+  }
+}
+
+async function fetchWithTimeout(
+  input: string,
+  init: RequestInit,
+  timeoutMs: number,
+  timeoutMessage: string,
+) {
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } catch (error) {
+    const aborted =
+      (error instanceof DOMException && error.name === "AbortError") ||
+      (error instanceof Error && error.name === "AbortError");
+    if (aborted) throw new RequestTimeoutError(timeoutMessage);
+    throw error;
+  } finally {
+    window.clearTimeout(timer);
+  }
+}
+
 function errorIdFor(key: string) {
   if (/^items\[\d+\]\./.test(key)) {
     const index = key.match(/^items\[(\d+)\]/)?.[1] ?? "0";
@@ -363,10 +393,13 @@ export default function ApplyPage() {
   const [dragOver, setDragOver] = useState(false);
   const [savedAt, setSavedAt] = useState<string | null>(initialDraft.savedAt);
   const [submitting, setSubmitting] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [result, setResult] = useState<ApplicationResult | null>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
   const successRef = useRef<HTMLElement>(null);
   const fileStore = useRef(new Map<string, File>());
+  const formRef = useRef<HTMLFormElement>(null);
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     document.title = "商家参展申请｜66th & 2nd Ave.";
@@ -378,6 +411,31 @@ export default function ApplyPage() {
     const heading = successRef.current?.querySelector("h2");
     heading?.focus({ preventScroll: true });
   }, [result]);
+
+  useEffect(() => {
+    if (!submitting) {
+      setElapsedSeconds(0);
+      return;
+    }
+    const startedAt = Date.now();
+    setElapsedSeconds(0);
+    const timer = window.setInterval(() => {
+      setElapsedSeconds(Math.floor((Date.now() - startedAt) / 1000));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [submitting]);
+
+  useEffect(() => {
+    const busy =
+      submitting || form.files.some((file) => file.status === "uploading");
+    if (!busy) return;
+    const warnBeforeLeave = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warnBeforeLeave);
+    return () => window.removeEventListener("beforeunload", warnBeforeLeave);
+  }, [form.files, submitting]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -485,10 +543,12 @@ export default function ApplyPage() {
     body.append("kind", entry.kind);
 
     try {
-      const response = await fetch(`${API_BASE}/api/v1/uploads`, {
-        method: "POST",
-        body,
-      });
+      const response = await fetchWithTimeout(
+        `${API_BASE}/api/v1/uploads`,
+        { method: "POST", body },
+        UPLOAD_TIMEOUT_MS,
+        "附件上传超时，请重试",
+      );
       const data = await response.json().catch(() => null);
       if (!response.ok) {
         throw new Error(readApiMessage(data, "附件上传失败，请重试"));
@@ -518,7 +578,9 @@ export default function ApplyPage() {
                 ...item,
                 status: "error",
                 message:
-                  error instanceof TypeError
+                  error instanceof RequestTimeoutError
+                    ? error.message
+                    : error instanceof TypeError
                     ? "附件上传失败，请稍后重试"
                     : error instanceof Error
                       ? error.message
@@ -816,18 +878,28 @@ export default function ApplyPage() {
     };
   }
 
+  function focusSummary() {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        scrollUnderHeader(summaryRef.current);
+        summaryRef.current?.focus({ preventScroll: true });
+      });
+    });
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submittingRef.current) return;
+    if (uploadingCount > 0) {
+      setGeneralError("附件仍在上传，请耐心等待完成后再提交。");
+      focusSummary();
+      return;
+    }
     setGeneralError(null);
     const nextErrors = validate();
     if (Object.keys(nextErrors).length) {
       setErrors(nextErrors);
-      window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => {
-          scrollUnderHeader(summaryRef.current);
-          summaryRef.current?.focus({ preventScroll: true });
-        });
-      });
+      focusSummary();
       return;
     }
 
@@ -843,14 +915,20 @@ export default function ApplyPage() {
       return;
     }
 
+    submittingRef.current = true;
     setSubmitting(true);
     setErrors({});
     try {
-      const response = await fetch(`${API_BASE}/api/v1/applications`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(buildPayload()),
-      });
+      const response = await fetchWithTimeout(
+        `${API_BASE}/api/v1/applications`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(buildPayload()),
+        },
+        SUBMIT_TIMEOUT_MS,
+        "报名服务响应超时",
+      );
       const data = await response.json().catch(() => null);
       if (response.status === 201 && data) {
         setResult(data as ApplicationResult);
@@ -869,19 +947,24 @@ export default function ApplyPage() {
       } else if (response.status === 413) {
         setGeneralError("附件合计超过限制，请压缩或减少文件后重试");
       } else if (response.status === 429) {
-        setGeneralError("提交过于频繁，请稍候再试");
+        setGeneralError("提交过于频繁，请稍等 1 分钟再试");
+      } else if (response.status >= 500) {
+        setGeneralError(
+          "报名服务暂时不可用，请稍后重试，或将资料发送至 buzzlu@qq.com。",
+        );
       } else {
         setGeneralError(readApiMessage(data, "提交失败，请稍后重试"));
       }
-      window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => {
-          scrollUnderHeader(summaryRef.current);
-          summaryRef.current?.focus({ preventScroll: true });
-        });
-      });
-    } catch {
-      setGeneralError("无法连接报名服务，请检查网络后重试");
+      focusSummary();
+    } catch (error) {
+      setGeneralError(
+        error instanceof RequestTimeoutError
+          ? "报名服务响应超时，请稍后重试。资料仍保留在本页，请勿重复提交。"
+          : "无法连接报名服务，请检查网络后重试；如持续失败，可将资料发送至 buzzlu@qq.com。",
+      );
+      focusSummary();
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   }
@@ -905,7 +988,11 @@ export default function ApplyPage() {
   const errorEntries = Object.entries(errors);
 
   return (
-    <div className="apply-page">
+    <div
+      className={`apply-page ${
+        submitting || uploadingCount > 0 ? "has-flow-dock" : ""
+      }`}
+    >
       <AppHeader />
 
       {!result && (
@@ -1020,7 +1107,13 @@ export default function ApplyPage() {
           </section>
         ) : (
           <div className="apply-layout">
-            <form className="apply-form" noValidate onSubmit={handleSubmit}>
+            <form
+              className="apply-form"
+              noValidate
+              onSubmit={handleSubmit}
+              ref={formRef}
+              aria-busy={submitting}
+            >
               {!APPLICATION_API_ENABLED && (
                 <div className="preview-notice" role="status">
                   <strong>样式预览版</strong>
@@ -1035,7 +1128,7 @@ export default function ApplyPage() {
                   tabIndex={-1}
                   ref={summaryRef}
                 >
-                  <strong>请检查以下内容</strong>
+                  <strong>{generalError ? "提交未完成" : "请检查以下内容"}</strong>
                   {generalError && <p>{generalError}</p>}
                   {errorEntries.length > 0 && (
                     <ul>
@@ -1047,6 +1140,15 @@ export default function ApplyPage() {
                         </li>
                       ))}
                     </ul>
+                  )}
+                  {generalError && APPLICATION_API_ENABLED && !submitting && (
+                    <button
+                      className="error-summary__retry"
+                      type="button"
+                      onClick={() => formRef.current?.requestSubmit()}
+                    >
+                      重新提交
+                    </button>
                   )}
                 </div>
               )}
@@ -1610,7 +1712,9 @@ export default function ApplyPage() {
                   </div>
 
                   <label
-                    className={`dropzone ${dragOver ? "is-over" : ""}`}
+                    className={`dropzone ${dragOver ? "is-over" : ""} ${
+                      submitting ? "is-disabled" : ""
+                    }`}
                     htmlFor="apply-files"
                     onDragOver={(event) => {
                       event.preventDefault();
@@ -1627,6 +1731,7 @@ export default function ApplyPage() {
                       id="apply-files"
                       type="file"
                       multiple
+                      disabled={submitting}
                       accept=".jpg,.jpeg,.png,.webp,.heic,.pdf,.zip"
                       onChange={(event) => {
                         if (event.target.files) void addFiles(event.target.files);
@@ -1635,13 +1740,16 @@ export default function ApplyPage() {
                     />
                     <span className="dropzone__recommendation">建议打包上传</span>
                     <span className="dropzone__title">
-                      {uploadingCount ? "正在上传附件…" : "拖放文件到这里，或点击选择"}
+                      {uploadingCount
+                        ? "正在上传附件，请耐心等待…"
+                        : "拖放文件到这里，或点击选择"}
                     </span>
                     <span className="dropzone__hint">
-                      优先上传 ZIP 压缩包；JPG、PNG、WebP、HEIC、PDF 也可单独上传
+                      优先上传 ZIP 压缩包；JPG、PNG、WebP、HEIC、PDF 也可单独上传。上传后请保持页面开启。
                     </span>
                     <span className="dropzone__limit">
                       单个文件不超过 {MAX_FILE_MB} MB / 合计不超过 {MAX_TOTAL_MB} MB
+                      ，大文件可能需要 1–2 分钟
                     </span>
                     <span className="dropzone__action" aria-hidden="true">
                       {uploadingCount ? (
@@ -1690,6 +1798,7 @@ export default function ApplyPage() {
                                 className="text-button"
                                 type="button"
                                 onClick={() => void retryUpload(file.localId)}
+                                disabled={submitting}
                               >
                                 重试
                               </button>
@@ -1700,6 +1809,7 @@ export default function ApplyPage() {
                             type="button"
                             aria-label={`移除 ${file.name}`}
                             onClick={() => removeUpload(file.localId)}
+                            disabled={submitting}
                           >
                             ×
                           </button>
@@ -1710,7 +1820,7 @@ export default function ApplyPage() {
 
                   <p className="field__hint">
                     {APPLICATION_API_ENABLED
-                      ? "建议将多张图片和商品清单合并为一个 ZIP 包。附件上传后需完成提交才会绑定到报名；未提交的文件不会进入审核。"
+                      ? "建议将多张图片和商品清单合并为一个 ZIP 包。上传过程中请耐心等待并保持页面开启；附件上传后需完成提交才会绑定到报名，未提交的文件不会进入审核。"
                       : "建议将多张图片和商品清单合并为一个 ZIP 包。当前为样式预览，附件只在本页展示，不会上传至服务器。"}
                   </p>
                 </div>
@@ -1822,26 +1932,38 @@ export default function ApplyPage() {
 
                 <div className="submit-panel">
                   <div className="submit-panel__actions">
-                    <button className="submit-button" type="submit" disabled={submitting}>
+                    <button
+                      className="submit-button"
+                      type="submit"
+                      disabled={submitting || uploadingCount > 0}
+                    >
                       <span>
                         {submitting
-                          ? "正在提交…"
+                          ? `正在提交，请稍候${elapsedSeconds > 0 ? `（${elapsedSeconds} 秒）` : ""}`
+                          : uploadingCount > 0
+                            ? "附件上传中，请稍候"
                           : APPLICATION_API_ENABLED
                             ? "提交参展申请"
                             : "预览提交"}
                       </span>
                       <span className="arrow" aria-hidden="true">
-                        {submitting ? "…" : "↗"}
+                        {submitting || uploadingCount > 0 ? "…" : "↗"}
                       </span>
                     </button>
                     <button
                       className="text-button text-button--danger"
                       type="button"
                       onClick={clearDraft}
+                      disabled={submitting || uploadingCount > 0}
                     >
                       清空本机草稿
                     </button>
                   </div>
+                  <p className="submit-panel__patience">
+                    {APPLICATION_API_ENABLED
+                      ? "提交后请耐心等待，通常需要 10–60 秒；请勿重复点击或关闭页面。"
+                      : "当前为样式预览，预览提交不会发送报名数据。"}
+                  </p>
                   <div className="submit-panel__foot">
                     <span>
                       {savedAt ? `草稿已自动保存 · ${formatSavedAt(savedAt)}` : "草稿会保存在本机浏览器"}
@@ -1929,6 +2051,30 @@ export default function ApplyPage() {
       </main>
 
       <ApplyFooter />
+
+      {(submitting || uploadingCount > 0) && (
+        <div className="flow-dock">
+          <span className="spinner flow-dock__spinner" aria-hidden="true" />
+          <div className="flow-dock__body">
+            <strong role="status" aria-live="polite">
+              {submitting
+                ? "正在提交申请，请耐心等待"
+                : "正在上传附件，请耐心等待"}
+            </strong>
+            <p aria-hidden="true">
+              {submitting
+                ? `资料已校验，正在写入报名系统 · 已等待 ${elapsedSeconds} 秒`
+                : `${uploadingCount} 个文件处理中，上传完成后才能提交`}
+            </p>
+          </div>
+          <span className="flow-dock__hint">
+            {submitting ? "请勿关闭页面或重复提交" : "大文件可能需要 1–2 分钟"}
+          </span>
+          <span className="flow-dock__bar" aria-hidden="true">
+            <span />
+          </span>
+        </div>
+      )}
     </div>
   );
 }

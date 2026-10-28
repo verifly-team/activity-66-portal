@@ -17,6 +17,10 @@
     "Futura", "Avenir Next Condensed", "Helvetica Neue", Arial, sans-serif;
 }
 
+.apply-page.has-flow-dock {
+  padding-bottom: 120px;
+}
+
 .apply-header {
   position: sticky;
   top: 0;
@@ -1156,6 +1160,13 @@
   color: var(--muted);
 }
 
+.submit-panel__patience {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
 .apply-aside {
   display: grid;
   align-content: start;
@@ -1657,6 +1668,105 @@
   }
 }
 
+.dropzone.is-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.upload-row__remove:disabled,
+.text-button--danger:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.flow-dock {
+  position: fixed;
+  z-index: 60;
+  left: 50%;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  display: grid;
+  width: min(680px, calc(100% - 32px));
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 14px;
+  padding: 14px 18px 16px;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  box-shadow: 0 14px 36px rgba(25, 25, 23, 0.16);
+  transform: translateX(-50%);
+}
+
+.flow-dock__spinner {
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+}
+
+.flow-dock__body {
+  display: grid;
+  gap: 4px;
+}
+
+.flow-dock__body strong {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.flow-dock__body p {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.flow-dock__hint {
+  grid-column: 2;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.flow-dock__bar {
+  display: block;
+  grid-column: 1 / -1;
+  height: 2px;
+  margin-top: 8px;
+  overflow: hidden;
+  background: var(--line);
+}
+
+.flow-dock__bar span {
+  display: block;
+  width: 42%;
+  height: 100%;
+  background: var(--ink);
+  animation: flow-dock-slide 1.5s ease-in-out infinite;
+}
+
+@keyframes flow-dock-slide {
+  0% {
+    transform: translateX(-105%);
+  }
+
+  100% {
+    transform: translateX(255%);
+  }
+}
+
+@media (max-width: 599px) {
+  .apply-page.has-flow-dock {
+    padding-bottom: 132px;
+  }
+
+  .flow-dock {
+    width: calc(100% - 20px);
+    padding: 12px 14px 14px;
+  }
+
+  .flow-dock__hint {
+    grid-column: 1 / -1;
+    padding-left: 28px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .apply-input,
   .apply-textarea,
@@ -1671,6 +1781,12 @@
   }
 
   .spinner {
+    animation: none;
+  }
+
+  .flow-dock__bar span {
+    width: 100%;
+    opacity: 0.35;
     animation: none;
   }
 }
