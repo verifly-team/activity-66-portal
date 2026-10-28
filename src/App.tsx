@@ -301,7 +301,6 @@ function App() {
                           </button>
                           <div className="wechat-popover" aria-hidden="true">
                             <img src={socialWechatQr} alt="" />
-                            <span>微信扫码添加</span>
                           </div>
                         </>
                       )}
@@ -576,7 +575,7 @@ function App() {
             id="wechat-dialog"
             role="dialog"
             aria-modal="true"
-            aria-labelledby="wechat-dialog-title"
+            aria-label="巴洛塔微信公众号"
             tabIndex={-1}
           >
             <button
@@ -588,7 +587,6 @@ function App() {
               <span aria-hidden="true" />
             </button>
             <p className="wechat-dialog__eyebrow">WeChat / 微信</p>
-            <h2 id="wechat-dialog-title">微信扫码添加</h2>
             <img
               className="wechat-dialog__qr"
               src={socialWechatQr}

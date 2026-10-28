@@ -361,14 +361,6 @@ button.social-item__link {
   line-height: 1.2;
 }
 
-.wechat-dialog h2 {
-  margin-top: 10px;
-  font-family: var(--display);
-  font-size: 26px;
-  font-weight: 600;
-  line-height: 1.2;
-}
-
 .wechat-dialog__qr {
   width: min(260px, calc(100vw - 100px));
   height: auto;
@@ -892,12 +884,6 @@ button.social-item__link {
     height: auto;
   }
 
-  .wechat-popover span {
-    font-size: 12px;
-    font-weight: 500;
-    line-height: 1.2;
-    text-align: center;
-  }
 }
 
 @media (hover: hover) and (pointer: fine) and (min-width: 1200px) {
