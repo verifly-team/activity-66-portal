@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import campaignDesktop from "./assets/figma-2026-10/campaign-desktop-latest.webp";
 import coomenLogo from "./assets/figma-2026-10/coomen-logo.webp";
 import footerDesktop from "./assets/figma-2026-10/footer-desktop.webp";
@@ -9,6 +10,7 @@ import mobileHeroWebp from "./assets/figma-2026-10/mobile-hero.webp";
 import socialInstagram from "./assets/figma-2026-10/social-instagram.png";
 import socialTiktok from "./assets/figma-2026-10/social-tiktok.png";
 import socialWechat from "./assets/figma-2026-10/social-wechat.png";
+import socialWechatQr from "./assets/figma-2026-10/social-wechat-qr.webp";
 import socialXiaohongshu from "./assets/figma-2026-10/social-xiaohongshu.png";
 import supportLogo from "./assets/figma-2026-10/support-logo.webp";
 import ticketQr from "./assets/figma-2026-10/ticket-qr.webp";
@@ -83,31 +85,29 @@ const mobileFoodItems = [
   { code: "D06", name: "安可咖啡" },
 ] as const;
 
-// 社交账号链接待补充：填入 url 后条目会自动变为可点击链接。
 const socialItems = [
   {
     id: "xiaohongshu",
     label: "66th & 2nd Ave.",
     icon: socialXiaohongshu,
-    url: null as string | null,
+    url: "https://www.xiaohongshu.com/user/profile/6a3671e3000000000f03ac00",
   },
   {
     id: "instagram",
     label: "66th2nd_ave",
     icon: socialInstagram,
-    url: null as string | null,
+    url: "https://www.instagram.com/66th2nd_ave/",
   },
   {
-    id: "tiktok",
+    id: "douyin",
     label: "66th & 2nd Ave.",
     icon: socialTiktok,
-    url: null as string | null,
+    url: "https://www.douyin.com/user/MS4wLjABAAAAhrS6VG4Y9wtjpxDhlNe0SuMPU9rIo37IXlNkAEVVnq27763q07Cp1YcDppVmoHKE",
   },
   {
     id: "wechat",
     label: "巴洛塔",
     icon: socialWechat,
-    url: null as string | null,
   },
 ] as const;
 
@@ -158,9 +158,34 @@ function VendorList({
 }
 
 function App() {
+  const [wechatOpen, setWechatOpen] = useState(false);
+  const wechatTriggerRef = useRef<HTMLButtonElement>(null);
+  const wechatDialogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!wechatOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const trigger = wechatTriggerRef.current;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setWechatOpen(false);
+    };
+
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", closeOnEscape);
+    wechatDialogRef.current?.focus();
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", closeOnEscape);
+      trigger?.focus();
+    };
+  }, [wechatOpen]);
+
   return (
-    <div className="site" id="top">
-      <header className="site-header">
+    <>
+      <div className="site" id="top">
+        <header className="site-header">
         <div className="site-header__bar">
           <a className="brand" href="#top" aria-label="66th & 2nd Ave. 首页">
             <img
@@ -190,9 +215,9 @@ function App() {
           <a href="#fashion">Fashion Show</a>
           <a href="./apply.html">Vendors</a>
         </nav>
-      </header>
+        </header>
 
-      <main>
+        <main>
         <section className="campaign" aria-label="活动主视觉">
           <picture>
             <source
@@ -252,7 +277,7 @@ function App() {
                       className={`social-item social-item--${item.id}`}
                       key={item.id}
                     >
-                      {item.url ? (
+                      {"url" in item ? (
                         <a
                           className="social-item__link"
                           href={item.url}
@@ -262,7 +287,23 @@ function App() {
                           {body}
                         </a>
                       ) : (
-                        <span className="social-item__link">{body}</span>
+                        <>
+                          <button
+                            ref={wechatTriggerRef}
+                            className="social-item__link social-wechat__trigger"
+                            type="button"
+                            aria-haspopup="dialog"
+                            aria-expanded={wechatOpen}
+                            aria-controls="wechat-dialog"
+                            onClick={() => setWechatOpen(true)}
+                          >
+                            {body}
+                          </button>
+                          <div className="wechat-popover" aria-hidden="true">
+                            <img src={socialWechatQr} alt="" />
+                            <span>微信扫码添加</span>
+                          </div>
+                        </>
                       )}
                     </li>
                   );
@@ -506,21 +547,60 @@ function App() {
             />
           </div>
         </section>
-      </main>
-      <footer className="site-footer" aria-hidden="true">
-        <picture>
-          <source media="(min-width: 900px)" srcSet={footerDesktop} />
-          <img
-            src={mobileFooter}
-            width="780"
-            height="62"
-            loading="lazy"
-            decoding="async"
-            alt=""
-          />
-        </picture>
-      </footer>
-    </div>
+        </main>
+        <footer className="site-footer" aria-hidden="true">
+          <picture>
+            <source media="(min-width: 900px)" srcSet={footerDesktop} />
+            <img
+              src={mobileFooter}
+              width="780"
+              height="62"
+              loading="lazy"
+              decoding="async"
+              alt=""
+            />
+          </picture>
+        </footer>
+      </div>
+
+      {wechatOpen && (
+        <div
+          className="wechat-dialog-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setWechatOpen(false);
+          }}
+        >
+          <div
+            ref={wechatDialogRef}
+            className="wechat-dialog"
+            id="wechat-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="wechat-dialog-title"
+            tabIndex={-1}
+          >
+            <button
+              className="wechat-dialog__close"
+              type="button"
+              aria-label="关闭微信二维码"
+              onClick={() => setWechatOpen(false)}
+            >
+              <span aria-hidden="true" />
+            </button>
+            <p className="wechat-dialog__eyebrow">WeChat / 微信</p>
+            <h2 id="wechat-dialog-title">微信扫码添加</h2>
+            <img
+              className="wechat-dialog__qr"
+              src={socialWechatQr}
+              width="1280"
+              height="1280"
+              alt="巴洛塔微信二维码"
+            />
+            <p className="wechat-dialog__caption">巴洛塔</p>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

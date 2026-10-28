@@ -37,12 +37,17 @@ a {
   -webkit-tap-highlight-color: transparent;
 }
 
+button {
+  font: inherit;
+}
+
 a {
   color: inherit;
   text-decoration: none;
 }
 
-a:focus-visible {
+a:focus-visible,
+button:focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 4px;
 }
@@ -243,6 +248,21 @@ dd {
   gap: 20px;
 }
 
+button.social-item__link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.social-item__link:hover .social-item__label,
+.social-item__link:focus-visible .social-item__label {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
 .social-item__icon {
   justify-self: center;
   width: auto;
@@ -263,8 +283,102 @@ dd {
   order: 3;
 }
 
-.social-item--tiktok {
+.social-item--douyin {
   order: 4;
+}
+
+.social-item--wechat {
+  position: relative;
+}
+
+.wechat-popover {
+  display: none;
+}
+
+.wechat-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(25, 25, 23, 0.62);
+}
+
+.wechat-dialog {
+  position: relative;
+  width: min(360px, 100%);
+  padding: 30px 26px 24px;
+  background: var(--white);
+  border: 1px solid var(--ink);
+  box-shadow: 0 18px 70px rgba(0, 0, 0, 0.24);
+  text-align: center;
+}
+
+.wechat-dialog:focus {
+  outline: none;
+}
+
+.wechat-dialog__close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.wechat-dialog__close span,
+.wechat-dialog__close span::before,
+.wechat-dialog__close span::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 1px;
+  background: var(--ink);
+  content: "";
+}
+
+.wechat-dialog__close span {
+  transform: translate(-50%, -50%);
+}
+
+.wechat-dialog__close span::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.wechat-dialog__close span::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.wechat-dialog__eyebrow {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.wechat-dialog h2 {
+  margin-top: 10px;
+  font-family: var(--display);
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.wechat-dialog__qr {
+  width: min(260px, calc(100vw - 100px));
+  height: auto;
+  margin: 20px auto 16px;
+}
+
+.wechat-dialog__caption {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.2;
 }
 
 .market {
@@ -742,6 +856,62 @@ dd {
   left: 114px;
   width: 121px;
   height: 44px;
+}
+
+@media (hover: hover) and (pointer: fine) and (min-width: 900px) {
+  .wechat-popover {
+    position: absolute;
+    bottom: calc(100% + 16px);
+    left: 50%;
+    z-index: 20;
+    display: grid;
+    width: 238px;
+    gap: 10px;
+    padding: 14px;
+    visibility: hidden;
+    background: var(--white);
+    border: 1px solid var(--line);
+    box-shadow: 0 14px 44px rgba(25, 25, 23, 0.16);
+    opacity: 0;
+    transform: translate(-50%, 6px);
+    transition:
+      opacity 160ms ease,
+      transform 160ms ease,
+      visibility 160ms ease;
+  }
+
+  .social-item--wechat:hover .wechat-popover,
+  .social-item--wechat:focus-within .wechat-popover {
+    visibility: visible;
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  .wechat-popover img {
+    width: 100%;
+    height: auto;
+  }
+
+  .wechat-popover span {
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.2;
+    text-align: center;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) and (min-width: 1200px) {
+  .wechat-popover {
+    top: 50%;
+    bottom: auto;
+    left: calc(100% + 40px);
+    transform: translate(6px, -50%);
+  }
+
+  .social-item--wechat:hover .wechat-popover,
+  .social-item--wechat:focus-within .wechat-popover {
+    transform: translate(0, -50%);
+  }
 }
 
 @media (min-width: 600px) and (max-width: 899px) {
