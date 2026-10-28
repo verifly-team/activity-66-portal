@@ -82,17 +82,26 @@ const mobileFoodItems = [
 const fashionShows = [
   {
     title: "Regular Vintage Fashion Show",
-    date: "2026.12.25 Fri.",
+    date: {
+      desktop: "2026.12.25 Fri.",
+      mobile: "2026.12.25 Fri",
+    },
     time: "14:00 - 14:30",
   },
   {
     title: "Future Vintage Fashion Show",
-    date: "2026.12.26 Sta.",
+    date: {
+      desktop: "2026.12.26 Sta.",
+      mobile: "2026.12.26 Sat",
+    },
     time: "14:00 - 14:30",
   },
   {
     title: "Special Vintage Fashion Show",
-    date: "2026.12.27 Sun.",
+    date: {
+      desktop: "2026.12.27 Sun.",
+      mobile: "2026.12.27 Sun",
+    },
     time: "14:00 - 14:30",
   },
 ] as const;
@@ -294,7 +303,12 @@ function App() {
                 <span className="fashion-show__title">{show.title}</span>
                 <span className="fashion-show__date">
                   <span className="fashion-show__prefix">Date</span>
-                  {show.date}
+                  <span className="fashion-show__date-desktop">
+                    {show.date.desktop}
+                  </span>
+                  <span className="fashion-show__date-mobile">
+                    {show.date.mobile}
+                  </span>
                 </span>
                 <span className="fashion-show__time">{show.time}</span>
               </div>

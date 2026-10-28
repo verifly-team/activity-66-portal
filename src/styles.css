@@ -410,6 +410,10 @@ dd {
   height: auto;
 }
 
+.fashion-show__date-mobile {
+  display: none;
+}
+
 .visit {
   gap: 36px;
   padding: 64px 20px;
@@ -1502,6 +1506,14 @@ dd {
 
   .fashion-show__prefix {
     margin-right: 5px;
+  }
+
+  .fashion-show__date-desktop {
+    display: none;
+  }
+
+  .fashion-show__date-mobile {
+    display: inline;
   }
 
   .visit {
