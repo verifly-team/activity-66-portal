@@ -76,6 +76,7 @@ function App() {
             <a href="#visit">
               立刻购票 <Arrow />
             </a>
+            <a href="./apply.html">商家参展</a>
           </nav>
 
           <a className="mobile-ticket" href="#visit">
@@ -88,6 +89,7 @@ function App() {
           <a href="#market">复古街区</a>
           <a href="#workshop">工作坊</a>
           <a href="#fashion">时尚秀场</a>
+          <a href="./apply.html">商家参展</a>
         </nav>
       </header>
 

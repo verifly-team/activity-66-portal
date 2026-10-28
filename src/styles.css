@@ -125,7 +125,7 @@ dd {
 .mobile-nav {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 18px;
   padding: 0 20px 18px;
   overflow-x: auto;
