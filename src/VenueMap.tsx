@@ -57,9 +57,9 @@ export function VenueMap({ lat, lng }: VenueMapProps) {
     // Free Amap raster tiles keep this block light; swap the URL for a
     // licensed tile provider without changing the rest of the component.
     const tiles = L.tileLayer(
-      "https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}",
+      "https://webst0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}",
       {
-        subdomains: ["1", "2", "3", "4"],
+        subdomains: ["1", "3", "4"],
         minZoom: 1,
         maxZoom: 18,
       },
