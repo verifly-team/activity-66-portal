@@ -42,7 +42,7 @@ export function VenueMap({ lat, lng }: VenueMapProps) {
 
     const map = L.map(container, {
       center: [lat, lng],
-      zoom: 16.5,
+      zoom: 17.6,
       zoomSnap: 0,
       zoomControl: false,
       attributionControl: false,
@@ -59,7 +59,7 @@ export function VenueMap({ lat, lng }: VenueMapProps) {
     const tiles = L.tileLayer(
       "https://webst0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}",
       {
-        subdomains: ["1", "3", "4"],
+        subdomains: ["1", "3"],
         minZoom: 1,
         maxZoom: 18,
       },
