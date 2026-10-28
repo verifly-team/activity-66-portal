@@ -6,6 +6,10 @@ import marketPlanDesktop from "./assets/figma-2026-10/market-plan-desktop.webp";
 import marketPlanMobile from "./assets/figma-2026-10/market-plan-mobile.webp";
 import mobileFooter from "./assets/figma-2026-10/mobile-footer.png";
 import mobileHeroWebp from "./assets/figma-2026-10/mobile-hero.webp";
+import socialInstagram from "./assets/figma-2026-10/social-instagram.png";
+import socialTiktok from "./assets/figma-2026-10/social-tiktok.png";
+import socialWechat from "./assets/figma-2026-10/social-wechat.png";
+import socialXiaohongshu from "./assets/figma-2026-10/social-xiaohongshu.png";
 import supportLogo from "./assets/figma-2026-10/support-logo.webp";
 import ticketQr from "./assets/figma-2026-10/ticket-qr.webp";
 import brandWebp from "./assets/optimized/brand.webp";
@@ -32,51 +36,79 @@ const workshopItems = [
 
 const vendorItems = [
   { code: "A01", name: "不设季" },
-  { code: "A02", name: "不设季" },
-  { code: "A03", name: "不设季" },
-  { code: "A04", name: "不设季" },
-  { code: "A05", name: "不设季" },
-  { code: "A01", name: "不设季" },
-  { code: "A02", name: "不设季" },
-  { code: "A03", name: "不设季" },
-  { code: "A04", name: "不设季" },
-  { code: "A05", name: "不设季" },
-  { code: "A01", name: "不设季" },
-  { code: "A02", name: "不设季" },
-  { code: "A03", name: "不设季" },
-  { code: "A04", name: "不设季" },
-  { code: "A05", name: "不设季" },
+  { code: "A02", name: "Inner Archive" },
+  { code: "A03", name: "Daddy Farm" },
+  { code: "A04", name: "In Tatters" },
+  { code: "A05", name: "BUY 42" },
+  { code: "B01", name: "Ballo Space" },
+  { code: "B02", name: "Timber Vintage" },
+  { code: "B03", name: "Past Vintage" },
+  { code: "B04", name: "光荣二手" },
+  { code: "B05", name: "Full Moon" },
+  { code: "B06", name: "雅昌印刷" },
+  { code: "B07", name: "Zoom Ink" },
+  { code: "B08", name: "布雷德男士理发" },
+  { code: "B09", name: "世集卡牌" },
+  { code: "B10", name: "Swing Vintage" },
 ] as const;
 
 const foodItems = [
-  { code: "A01", name: "不设季" },
-  { code: "A02", name: "不设季" },
-  { code: "A03", name: "不设季" },
-  { code: "A04", name: "不设季" },
-  { code: "A05", name: "不设季" },
-  { code: "A01", name: "不设季" },
-  { code: "A02", name: "不设季" },
-  { code: "A03", name: "不设季" },
-  { code: "A04", name: "不设季" },
-  { code: "A05", name: "不设季" },
+  { code: "D01", name: "beko beko" },
+  { code: "D02", name: "巴耶尔的厨房" },
+  { code: "D03", name: "艾薇达" },
+  { code: "D04", name: "Gelato" },
+  { code: "D05", name: "美叮美当" },
+  { code: "D06", name: "安可咖啡" },
+  { code: "D07", name: "起酥面包" },
+  { code: "D08", name: "座位以待" },
+  { code: "D09", name: "座位以待" },
+  { code: "D10", name: "座位以待" },
 ] as const;
 
 const mobileVendorItems = [
   { code: "A01", name: "不设季" },
-  { code: "A02", name: "不设季" },
-  { code: "A03", name: "不设季" },
-  { code: "A04", name: "不设季" },
-  { code: "A05", name: "不设季" },
-  { code: "A06", name: "不设季" },
+  { code: "A02", name: "Inner Archive" },
+  { code: "A03", name: "Daddy Farm" },
+  { code: "A04", name: "In Tatters" },
+  { code: "A05", name: "BUY 42" },
+  { code: "B01", name: "Ballo Space" },
 ] as const;
 
 const mobileFoodItems = [
-  { code: "A01", name: "不设季" },
-  { code: "A02", name: "不设季" },
-  { code: "A01", name: "不设季" },
-  { code: "A02", name: "不设季" },
-  { code: "A01", name: "不设季" },
-  { code: "A02", name: "不设季" },
+  { code: "D01", name: "beko beko" },
+  { code: "D02", name: "巴耶尔的厨房" },
+  { code: "D03", name: "艾薇达" },
+  { code: "D04", name: "Gelato" },
+  { code: "D05", name: "美叮美当" },
+  { code: "D06", name: "安可咖啡" },
+] as const;
+
+// 社交账号链接待补充：填入 url 后条目会自动变为可点击链接。
+const socialItems = [
+  {
+    id: "xiaohongshu",
+    label: "66th & 2nd Ave.",
+    icon: socialXiaohongshu,
+    url: null as string | null,
+  },
+  {
+    id: "instagram",
+    label: "66th2nd_ave",
+    icon: socialInstagram,
+    url: null as string | null,
+  },
+  {
+    id: "tiktok",
+    label: "66th & 2nd Ave.",
+    icon: socialTiktok,
+    url: null as string | null,
+  },
+  {
+    id: "wechat",
+    label: "巴洛塔",
+    icon: socialWechat,
+    url: null as string | null,
+  },
 ] as const;
 
 const fashionShows = [
@@ -91,7 +123,7 @@ const fashionShows = [
   {
     title: "Future Vintage Fashion Show",
     date: {
-      desktop: "2026.12.26 Sta.",
+      desktop: "2026.12.26 Sat.",
       mobile: "2026.12.26 Sat",
     },
     time: "14:00 - 14:30",
@@ -105,14 +137,6 @@ const fashionShows = [
     time: "14:00 - 14:30",
   },
 ] as const;
-
-function Arrow({ className = "" }: { className?: string }) {
-  return (
-    <span className={`arrow ${className}`} aria-hidden="true">
-      ↗
-    </span>
-  );
-}
 
 function VendorList({
   items,
@@ -146,27 +170,25 @@ function App() {
           </a>
 
           <nav className="desktop-nav" aria-label="主导航">
-            <a href="#about">关于我们</a>
-            <a href="#market">复古街区</a>
-            <a href="#workshop">工作坊</a>
-            <a href="#fashion">时尚秀场</a>
-            <a href="#visit">
-              立刻购票 <Arrow />
-            </a>
-            <a href="./apply.html">商家入驻</a>
+            <a href="#about">About</a>
+            <a href="#market">Vintage Market</a>
+            <a href="#workshop">Workshop</a>
+            <a href="#fashion">Fashion Show</a>
+            <a href="./apply.html">Vendors</a>
+            <a href="#visit">TICKETS</a>
           </nav>
 
           <a className="mobile-ticket" href="#visit">
-            立刻购票 <Arrow />
+            Tickets
           </a>
         </div>
 
         <nav className="mobile-nav" aria-label="移动端导航">
-          <a href="#about">关于我们</a>
-          <a href="#market">复古街区</a>
-          <a href="#workshop">工作坊</a>
-          <a href="#fashion">时尚秀场</a>
-          <a href="./apply.html">商家入驻</a>
+          <a href="#about">About</a>
+          <a href="#market">Vintage Market</a>
+          <a href="#workshop">Workshop</a>
+          <a href="#fashion">Fashion Show</a>
+          <a href="./apply.html">Vendors</a>
         </nav>
       </header>
 
@@ -188,7 +210,7 @@ function App() {
         </section>
 
         <section className="about" id="about" aria-labelledby="about-title">
-          <h2 id="about-title">ABOUT</h2>
+          <h2 id="about-title">About</h2>
           <div className="about__band">
             <div className="about__content">
               <p className="about__title">
@@ -211,6 +233,41 @@ function App() {
                   "A multidisciplinary creative designer specializing in brand strategy, visual communication, product and spatial design, and event planning. Experienced in fashion weeks, brand launches, and runway shows, with expertise in venue planning, spatial experiences, and art installations. Also the founder of an independent electronic music label and tea brand, continuously exploring the intersection of design, fashion, art, and culture."
                 }
               </p>
+              <ul className="social-list">
+                {socialItems.map((item) => {
+                  const body = (
+                    <>
+                      <img
+                        className="social-item__icon"
+                        src={item.icon}
+                        alt=""
+                        aria-hidden="true"
+                      />
+                      <span className="social-item__label">{item.label}</span>
+                    </>
+                  );
+
+                  return (
+                    <li
+                      className={`social-item social-item--${item.id}`}
+                      key={item.id}
+                    >
+                      {item.url ? (
+                        <a
+                          className="social-item__link"
+                          href={item.url}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {body}
+                        </a>
+                      ) : (
+                        <span className="social-item__link">{body}</span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
           </div>
         </section>
@@ -270,7 +327,7 @@ function App() {
           aria-labelledby="workshop-title"
         >
           <div className="workshop__intro">
-            <h2 id="workshop-title">WORK SHOP</h2>
+            <h2 id="workshop-title">Workshop</h2>
             <p className="workshop__summary">
               本期有十位艺术家聚集于此。
               <br />

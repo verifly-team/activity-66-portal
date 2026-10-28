@@ -227,6 +227,46 @@ dd {
   line-height: 1.8;
 }
 
+.social-list {
+  display: grid;
+  justify-items: center;
+  gap: 26px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.social-item__link {
+  display: grid;
+  grid-template-columns: 56px auto;
+  align-items: center;
+  gap: 20px;
+}
+
+.social-item__icon {
+  justify-self: center;
+  width: auto;
+  height: 34px;
+}
+
+.social-item__label {
+  font-size: 15px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.social-item--wechat {
+  order: 2;
+}
+
+.social-item--instagram {
+  order: 3;
+}
+
+.social-item--tiktok {
+  order: 4;
+}
+
 .market {
   display: grid;
   gap: 41px;
@@ -483,7 +523,7 @@ dd {
   height: 310px;
   overflow: hidden;
   padding: 20px;
-  background: var(--blue);
+  background: #808080;
   color: var(--paper);
 }
 
@@ -520,8 +560,8 @@ dd {
 }
 
 .venue__map-canvas .leaflet-tile-pane {
-  filter: grayscale(0.82) saturate(0.9) contrast(1.06) brightness(1.04);
-  opacity: 0.7;
+  filter: grayscale(1) contrast(0.92) brightness(1.02);
+  opacity: 0.55;
 }
 
 .venue__map::after {
@@ -530,18 +570,7 @@ dd {
   z-index: 2;
   pointer-events: none;
   content: "";
-  background:
-    radial-gradient(
-      circle at 50% 52%,
-      rgba(15, 38, 72, 0.58) 0%,
-      rgba(15, 38, 72, 0.36) 42%,
-      rgba(15, 38, 72, 0.22) 100%
-    ),
-    linear-gradient(
-      180deg,
-      rgba(97, 144, 191, 0.16),
-      rgba(15, 38, 72, 0.28)
-    );
+  background: rgba(128, 128, 128, 0.5);
 }
 
 .venue__map-label {
@@ -550,7 +579,7 @@ dd {
   font-size: 11px;
   font-weight: 500;
   line-height: 1.4;
-  text-shadow: 0 1px 10px rgba(17, 43, 80, 0.75);
+  text-shadow: 0 1px 10px rgba(72, 72, 72, 0.75);
 }
 
 .venue__map-heading {
@@ -592,15 +621,15 @@ dd {
   border: 2px solid var(--paper);
   border-radius: 50%;
   box-shadow:
-    0 0 0 6px rgba(230, 202, 218, 0.26),
-    0 0 0 14px rgba(230, 202, 218, 0.12);
+    0 0 0 6px rgba(243, 241, 235, 0.24),
+    0 0 0 14px rgba(243, 241, 235, 0.10);
 }
 
 .venue__marker p {
   font-size: 17px;
   font-weight: 500;
   line-height: 1.25;
-  text-shadow: 0 1px 14px rgba(17, 43, 80, 0.9);
+  text-shadow: 0 1px 14px rgba(72, 72, 72, 0.9);
 }
 
 .venue__map-link {
@@ -617,7 +646,7 @@ dd {
   color: var(--paper);
   text-decoration: underline;
   text-underline-offset: 4px;
-  text-shadow: 0 1px 10px rgba(17, 43, 80, 0.85);
+  text-shadow: 0 1px 10px rgba(72, 72, 72, 0.85);
 }
 
 .venue__map-credit {
@@ -628,7 +657,7 @@ dd {
   font-size: 9px;
   line-height: 1.2;
   color: rgba(243, 241, 235, 0.72);
-  text-shadow: 0 1px 8px rgba(17, 43, 80, 0.8);
+  text-shadow: 0 1px 8px rgba(72, 72, 72, 0.8);
 }
 
 .venue__address,
@@ -833,6 +862,32 @@ dd {
     line-height: 1.8;
   }
 
+  .social-list {
+    grid-template-columns: 395px minmax(0, 1fr);
+    justify-items: start;
+    gap: 46px 0;
+    width: min(640px, 100%);
+    margin: 16px auto 0;
+  }
+
+  .social-item {
+    order: 0;
+  }
+
+  .social-item__link {
+    grid-template-columns: 100px auto;
+    gap: 40px;
+  }
+
+  .social-item__icon {
+    justify-self: start;
+    height: 50px;
+  }
+
+  .social-item__label {
+    font-size: 16px;
+  }
+
   .market {
     gap: 125px;
     padding: 22px 0 112px;
@@ -881,16 +936,15 @@ dd {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
     column-gap: 0;
-    row-gap: 98px;
+    row-gap: 32px;
     width: min(1264px, calc(100% - 96px));
     margin: 0 auto;
   }
 
   .vendor-list--desktop .vendor-item {
-    display: flex;
-    height: 50px;
-    align-items: center;
-    gap: 11px;
+    display: grid;
+    justify-items: center;
+    gap: 14px;
   }
 
   .vendor-list--desktop .vendor-code {
@@ -906,6 +960,7 @@ dd {
   }
 
   .vendor-list--desktop .vendor-name {
+    text-align: center;
     font-size: 16px;
     line-height: 1.2;
     white-space: nowrap;
@@ -1166,7 +1221,7 @@ dd {
   }
 
   .support h2 {
-    text-transform: uppercase;
+    text-transform: none;
   }
 
   .support__logos {
@@ -1332,7 +1387,7 @@ dd {
     width: 100%;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: 56px;
-    row-gap: 96px;
+    row-gap: 44px;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -1347,10 +1402,9 @@ dd {
   }
 
   .vendor-item {
-    display: flex;
-    height: 27px;
-    align-items: center;
-    gap: 11px;
+    display: grid;
+    justify-items: center;
+    gap: 9px;
   }
 
   .vendor-code {
