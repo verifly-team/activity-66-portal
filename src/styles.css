@@ -234,7 +234,7 @@ dd {
 
 .social-list {
   display: grid;
-  justify-items: center;
+  justify-items: start;
   gap: 26px;
   margin: 6px 0 0;
   padding: 0;
@@ -243,7 +243,7 @@ dd {
 
 .social-item__link {
   display: grid;
-  grid-template-columns: 56px auto;
+  grid-template-columns: 72px auto;
   align-items: center;
   gap: 20px;
 }
@@ -264,7 +264,7 @@ button.social-item__link {
 }
 
 .social-item__icon {
-  justify-self: center;
+  justify-self: start;
   width: auto;
   height: 34px;
 }
