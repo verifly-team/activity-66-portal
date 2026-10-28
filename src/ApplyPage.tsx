@@ -518,7 +518,11 @@ export default function ApplyPage() {
                 ...item,
                 status: "error",
                 message:
-                  error instanceof Error ? error.message : "附件上传失败，请重试",
+                  error instanceof TypeError
+                    ? "附件上传失败，请稍后重试"
+                    : error instanceof Error
+                      ? error.message
+                      : "附件上传失败，请重试",
               }
             : item,
         ),
