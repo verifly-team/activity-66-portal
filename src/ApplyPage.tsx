@@ -3,10 +3,14 @@ import brandFallback from "./assets/optimized/brand.png";
 import brandWebp from "./assets/optimized/brand.webp";
 import "./apply.css";
 
-const API_BASE = (import.meta.env.VITE_API_BASE ?? "").replace(/\/$/, "");
-// 后端联调完成前保持预览模式，设置 VITE_APPLICATION_API_ENABLED=true 后恢复接口调用。
+const DEFAULT_API_BASE = "https://api.66thandsecondlovehealgiveus.com";
+const API_BASE = (import.meta.env.VITE_API_BASE ?? DEFAULT_API_BASE).replace(
+  /\/$/,
+  "",
+);
+// 线上默认直连报名服务；设置 VITE_APPLICATION_API_ENABLED=false 可退回纯预览模式。
 const APPLICATION_API_ENABLED =
-  import.meta.env.VITE_APPLICATION_API_ENABLED === "true";
+  import.meta.env.VITE_APPLICATION_API_ENABLED !== "false";
 const CONTACT_EMAIL = "buzzlu@qq.com";
 const DOCX_URL = `${import.meta.env.BASE_URL}66th-merchant-application-form.docx`;
 const DRAFT_KEY = "verifly:exhibitor-application:v1";

@@ -1,16 +1,16 @@
-import coomenLogo from "./assets/figma-2026-10/coomen-logo.png";
-import fashionShowDesktop from "./assets/figma-2026-10/fashion-show-desktop.png";
-import fashionShowMobile from "./assets/figma-2026-10/fashion-show-mobile.png";
+import campaignDesktop from "./assets/figma-2026-10/campaign-desktop-latest.webp";
+import coomenLogo from "./assets/figma-2026-10/coomen-logo.webp";
+import footerDesktop from "./assets/figma-2026-10/footer-desktop.webp";
 import locationTarget from "./assets/figma-2026-10/location-target.svg";
-import marketPlanDesktop from "./assets/figma-2026-10/market-plan-desktop.png";
-import marketPlanMobile from "./assets/figma-2026-10/market-plan-mobile.png";
-import supportLogo from "./assets/figma-2026-10/support-logo.png";
-import brandFallback from "./assets/optimized/brand.png";
+import marketPlanDesktop from "./assets/figma-2026-10/market-plan-desktop.webp";
+import marketPlanMobile from "./assets/figma-2026-10/market-plan-mobile.webp";
+import mobileFooter from "./assets/figma-2026-10/mobile-footer.png";
+import mobileHeroWebp from "./assets/figma-2026-10/mobile-hero.webp";
+import supportLogo from "./assets/figma-2026-10/support-logo.webp";
+import ticketQr from "./assets/figma-2026-10/ticket-qr.webp";
 import brandWebp from "./assets/optimized/brand.webp";
-import campaignDesktopFallback from "./assets/optimized/campaign-desktop.png";
-import campaignDesktopWebp from "./assets/optimized/campaign-desktop.webp";
-import campaignMobileFallback from "./assets/optimized/campaign-mobile.png";
-import campaignMobileWebp from "./assets/optimized/campaign-mobile.webp";
+import { VenueMap } from "./VenueMap";
+import { VENUE } from "./venue";
 
 const workshopItems = [
   {
@@ -30,6 +30,73 @@ const workshopItems = [
   },
 ] as const;
 
+const vendorItems = [
+  { code: "A01", name: "不设季" },
+  { code: "A02", name: "不设季" },
+  { code: "A03", name: "不设季" },
+  { code: "A04", name: "不设季" },
+  { code: "A05", name: "不设季" },
+  { code: "A01", name: "不设季" },
+  { code: "A02", name: "不设季" },
+  { code: "A03", name: "不设季" },
+  { code: "A04", name: "不设季" },
+  { code: "A05", name: "不设季" },
+  { code: "A01", name: "不设季" },
+  { code: "A02", name: "不设季" },
+  { code: "A03", name: "不设季" },
+  { code: "A04", name: "不设季" },
+  { code: "A05", name: "不设季" },
+] as const;
+
+const foodItems = [
+  { code: "A01", name: "不设季" },
+  { code: "A02", name: "不设季" },
+  { code: "A03", name: "不设季" },
+  { code: "A04", name: "不设季" },
+  { code: "A05", name: "不设季" },
+  { code: "A01", name: "不设季" },
+  { code: "A02", name: "不设季" },
+  { code: "A03", name: "不设季" },
+  { code: "A04", name: "不设季" },
+  { code: "A05", name: "不设季" },
+] as const;
+
+const mobileVendorItems = [
+  { code: "A01", name: "不设季" },
+  { code: "A02", name: "不设季" },
+  { code: "A03", name: "不设季" },
+  { code: "A04", name: "不设季" },
+  { code: "A05", name: "不设季" },
+  { code: "A06", name: "不设季" },
+] as const;
+
+const mobileFoodItems = [
+  { code: "A01", name: "不设季" },
+  { code: "A02", name: "不设季" },
+  { code: "A01", name: "不设季" },
+  { code: "A02", name: "不设季" },
+  { code: "A01", name: "不设季" },
+  { code: "A02", name: "不设季" },
+] as const;
+
+const fashionShows = [
+  {
+    title: "Regular Vintage Fashion Show",
+    date: "2026.12.25 Fri.",
+    time: "14:00 - 14:30",
+  },
+  {
+    title: "Future Vintage Fashion Show",
+    date: "2026.12.26 Sta.",
+    time: "14:00 - 14:30",
+  },
+  {
+    title: "Special Vintage Fashion Show",
+    date: "2026.12.27 Sun.",
+    time: "14:00 - 14:30",
+  },
+] as const;
+
 function Arrow({ className = "" }: { className?: string }) {
   return (
     <span className={`arrow ${className}`} aria-hidden="true">
@@ -38,21 +105,22 @@ function Arrow({ className = "" }: { className?: string }) {
   );
 }
 
-function PlaceholderGrid({
-  count,
-  label,
-  className,
+function VendorList({
+  items,
+  className = "",
 }: {
-  count: number;
-  label: string;
-  className: string;
+  items: readonly { code: string; name: string }[];
+  className?: string;
 }) {
   return (
-    <div className={`placeholder-grid ${className}`} role="img" aria-label={label}>
-      {Array.from({ length: count }, (_, index) => (
-        <span aria-hidden="true" key={index} />
+    <ul className={`vendor-list ${className}`.trim()}>
+      {items.map((item, index) => (
+        <li className="vendor-item" key={`${item.code}-${index}`}>
+          <span className="vendor-code">{item.code}</span>
+          <span className="vendor-name">{item.name}</span>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }
 
@@ -62,10 +130,10 @@ function App() {
       <header className="site-header">
         <div className="site-header__bar">
           <a className="brand" href="#top" aria-label="66th & 2nd Ave. 首页">
-            <picture>
-              <source type="image/webp" srcSet={brandWebp} />
-              <img src={brandFallback} alt="66th & 2nd Ave. Vintage Fashion Market" />
-            </picture>
+            <img
+              src={brandWebp}
+              alt="66th & 2nd Ave. Vintage Fashion Market"
+            />
           </a>
 
           <nav className="desktop-nav" aria-label="主导航">
@@ -76,7 +144,6 @@ function App() {
             <a href="#visit">
               立刻购票 <Arrow />
             </a>
-            <a href="./apply.html">商家参展</a>
           </nav>
 
           <a className="mobile-ticket" href="#visit">
@@ -89,7 +156,6 @@ function App() {
           <a href="#market">复古街区</a>
           <a href="#workshop">工作坊</a>
           <a href="#fashion">时尚秀场</a>
-          <a href="./apply.html">商家参展</a>
         </nav>
       </header>
 
@@ -97,27 +163,18 @@ function App() {
         <section className="campaign" aria-label="活动主视觉">
           <picture>
             <source
-              type="image/webp"
-              media="(min-width: 900px)"
-              srcSet={campaignDesktopWebp}
+              media="(max-width: 899px)"
+              srcSet={mobileHeroWebp}
             />
-            <source type="image/webp" srcSet={campaignMobileWebp} />
-            <source media="(min-width: 900px)" srcSet={campaignDesktopFallback} />
             <img
-              src={campaignMobileFallback}
-              width="1170"
-              height="1651"
+              src={campaignDesktop}
+              width="2400"
+              height="1384"
               fetchPriority="high"
               alt="66th & 2nd Ave. Vintage Fashion Market，2026.12.25 至 27，深圳华侨城创意文化园北区 C2 展厅"
             />
           </picture>
         </section>
-
-        <div className="quick-ticket">
-          <a href="#visit">
-            立刻购票 <Arrow />
-          </a>
-        </div>
 
         <section className="about" id="about" aria-labelledby="about-title">
           <h2 id="about-title">ABOUT</h2>
@@ -138,6 +195,11 @@ function App() {
                   "市集以纽约上东街区为灵感，集合Vintage Culture、Designer Archive、街头潮流、古着与各一线品牌的二手商品，以现代的购物体验、生活方式为表现形式。我们邀请风格鲜明的店铺相聚深圳，通过售卖、陈列与穿搭，让观众认识货品，了解每家店铺的审美与故事。"
                 }
               </p>
+              <p className="about__copy about__copy--en">
+                {
+                  "A multidisciplinary creative designer specializing in brand strategy, visual communication, product and spatial design, and event planning. Experienced in fashion weeks, brand launches, and runway shows, with expertise in venue planning, spatial experiences, and art installations. Also the founder of an independent electronic music label and tea brand, continuously exploring the intersection of design, fashion, art, and culture."
+                }
+              </p>
             </div>
           </div>
         </section>
@@ -153,15 +215,13 @@ function App() {
           </div>
 
           <div className="market__group">
-            <PlaceholderGrid
-              className="placeholder-grid--mobile"
-              count={9}
-              label="参展摊位列表，详细信息即将公布"
+            <VendorList
+              items={vendorItems}
+              className="vendor-list--desktop"
             />
-            <PlaceholderGrid
-              className="placeholder-grid--desktop"
-              count={15}
-              label="参展摊位列表，详细信息即将公布"
+            <VendorList
+              items={mobileVendorItems}
+              className="vendor-list--mobile"
             />
             <a className="view-more" href="#market-plan">
               查看更多
@@ -172,6 +232,8 @@ function App() {
             <source media="(min-width: 900px)" srcSet={marketPlanDesktop} />
             <img
               src={marketPlanMobile}
+              width="800"
+              height="976"
               loading="lazy"
               decoding="async"
               alt="Vintage Market 场地图，包含 A、B、C 摊位区、美食区和入口"
@@ -180,15 +242,13 @@ function App() {
 
           <div className="food-area">
             <h3>美食区</h3>
-            <PlaceholderGrid
-              className="placeholder-grid--mobile"
-              count={9}
-              label="美食区摊位列表，详细信息即将公布"
+            <VendorList
+              items={foodItems}
+              className="vendor-list--food vendor-list--desktop"
             />
-            <PlaceholderGrid
-              className="placeholder-grid--desktop"
-              count={10}
-              label="美食区摊位列表，详细信息即将公布"
+            <VendorList
+              items={mobileFoodItems}
+              className="vendor-list--food vendor-list--mobile"
             />
           </div>
         </section>
@@ -228,32 +288,39 @@ function App() {
             <h2 id="fashion-title">Fashion Show</h2>
             <p>时装秀简介</p>
           </div>
-          <picture className="fashion__schedule">
-            <source media="(min-width: 900px)" srcSet={fashionShowDesktop} />
-            <img
-              src={fashionShowMobile}
-              loading="lazy"
-              decoding="async"
-              alt="Vintage Fashion Show，2026 年 12 月 25 日至 27 日每天 14:00 至 14:30"
-            />
-          </picture>
+          <div className="fashion__schedule-text">
+            {fashionShows.map((show) => (
+              <div className="fashion-show" key={show.title}>
+                <span className="fashion-show__title">{show.title}</span>
+                <span className="fashion-show__date">
+                  <span className="fashion-show__prefix">Date</span>
+                  {show.date}
+                </span>
+                <span className="fashion-show__time">{show.time}</span>
+              </div>
+            ))}
+          </div>
         </section>
 
         <section className="visit" id="visit" aria-labelledby="visit-title">
           <div className="visit__intro">
-            <h2 id="visit-title">立刻购票</h2>
+            <h2 id="visit-title">
+              <span className="visit__title-mobile">Ticket</span>
+              <span className="visit__title-desktop">Tickets</span>
+            </h2>
             <p>
               识别下方小程序码，立刻购票
               <span className="visit__mobile-period">。</span>
             </p>
-            <div
-              className="ticket-card"
-              role="img"
-              aria-label="购票小程序码即将公布"
-            >
-              <span>TICKETS / DETAILS TO FOLLOW</span>
-              <Arrow />
-            </div>
+            <img
+              className="ticket-qr"
+              src={ticketQr}
+              width="360"
+              height="360"
+              loading="lazy"
+              decoding="async"
+              alt="购票小程序码"
+            />
           </div>
 
           <dl className="event-meta">
@@ -270,31 +337,53 @@ function App() {
 
         <section className="venue" aria-labelledby="venue-title">
           <div className="venue__rule" aria-hidden="true" />
+          <h2 className="venue__map-title">Map</h2>
 
-          <div className="venue__map" role="img" aria-label="深圳华侨城创意园 C2 空间位置示意">
+          <div
+            className="venue__map"
+            role="group"
+            aria-label="深圳华侨城创意园 C2 空间位置"
+          >
             <div className="venue__map-grid" aria-hidden="true" />
+            <VenueMap lat={VENUE.gcj02.lat} lng={VENUE.gcj02.lng} />
             <div className="venue__map-heading">
               <p className="venue__map-label">SHENZHEN / 深圳</p>
               <p className="venue__orientation">N ↑</p>
             </div>
             <div className="venue__marker">
               <img src={locationTarget} alt="" aria-hidden="true" />
-              <p>华侨城创意园C2空间</p>
+              <p>{VENUE.label}</p>
             </div>
+            <a
+              className="venue__map-link"
+              href={VENUE.amapUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              在高德地图中查看 <span aria-hidden="true">↗</span>
+            </a>
+            <p className="venue__map-credit">© 高德地图</p>
           </div>
 
           <div className="venue__address">
-            <h2 id="venue-title">深圳见</h2>
+            <h2 id="venue-title">
+              <span className="venue__title-mobile">Address</span>
+            </h2>
             <div>
-              <p className="venue__label">THE ADDRESS / 地址</p>
-              <p>
-                广东省深圳市南山区沙河街道香山街社区香山东街2号东部工业区C2栋
+              <p>{VENUE.address}</p>
+              <p className="venue__address-en">
+                Exhibition Hall C2, North Zone, OCT - LOFT,
+                <br />
+                Nanshan District, Shenzhen City.
               </p>
             </div>
           </div>
 
           <div className="venue__transport">
-            <p className="venue__label">GETTING HERE / 交通</p>
+            <p className="venue__label venue__label--transport">
+              <span className="venue__label-mobile">GETTING HERE</span>
+              <span className="venue__label-desktop">GETTING HERE / 交通</span>
+            </p>
             <p>
               侨城北站 B出口，步行约800米
               <br />
@@ -318,6 +407,8 @@ function App() {
             <img
               className="support__logo"
               src={supportLogo}
+              width="258"
+              height="364"
               loading="lazy"
               decoding="async"
               alt="善淘 BUY 42"
@@ -325,13 +416,37 @@ function App() {
             <img
               className="support__logo support__logo--partner"
               src={coomenLogo}
+              width="456"
+              height="166"
               loading="lazy"
               decoding="async"
               alt="粗门"
             />
+            <img
+              className="support__logo support__logo--closing"
+              src={supportLogo}
+              width="258"
+              height="364"
+              loading="lazy"
+              decoding="async"
+              alt="善淘 BUY 42"
+            />
           </div>
         </section>
       </main>
+      <footer className="site-footer" aria-hidden="true">
+        <picture>
+          <source media="(min-width: 900px)" srcSet={footerDesktop} />
+          <img
+            src={mobileFooter}
+            width="780"
+            height="62"
+            loading="lazy"
+            decoding="async"
+            alt=""
+          />
+        </picture>
+      </footer>
     </div>
   );
 }

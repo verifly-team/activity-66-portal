@@ -1,5 +1,6 @@
 import { readFile, readdir, writeFile } from "node:fs/promises";
 import { extname, resolve } from "node:path";
+import { build } from "esbuild";
 
 const distDir = resolve(process.cwd(), "dist");
 const outputPath = resolve(process.cwd(), "index.html");
@@ -66,8 +67,21 @@ for (const tag of scriptTags) {
   const src = tag.match(/src="([^"]+)"/)?.[1];
   if (!src) continue;
 
+  // Two HTML entries share React through a Rollup chunk, so the app bundle
+  // still contains a relative import after Vite finishes. Bundle that chunk
+  // back into the entry before the tag goes inline; relative ESM imports do
+  // not work when the file is opened through file://.
+  const bundled = await build({
+    entryPoints: [resolve(distDir, src.replace(/^\.\//, ""))],
+    bundle: true,
+    write: false,
+    format: "esm",
+    target: ["es2020"],
+    minify: true,
+    legalComments: "none",
+  });
   const script = await inlineAssets(
-    await readFile(resolve(distDir, src.replace(/^\.\//, "")), "utf8"),
+    bundled.outputFiles[0].text,
   );
   const escapedScript = script.replace(/<\/script/gi, "<\\/script");
   html = html.replace(
