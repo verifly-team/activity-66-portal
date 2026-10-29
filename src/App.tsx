@@ -1,20 +1,23 @@
 import { useEffect, useRef, useState } from "react";
-import campaignDesktop from "./assets/figma-2026-10/campaign-desktop-latest.webp";
 import coomenLogo from "./assets/figma-2026-10/coomen-logo.webp";
 import footerDesktop from "./assets/figma-2026-10/footer-desktop.webp";
+import heroDesktop from "./assets/figma-2026-10/hero-desktop.webp";
+import heroMobile from "./assets/figma-2026-10/hero-mobile.webp";
 import locationTarget from "./assets/figma-2026-10/location-target.svg";
-import marketPlanDesktop from "./assets/figma-2026-10/market-plan-desktop.webp";
-import marketPlanMobile from "./assets/figma-2026-10/market-plan-mobile.webp";
+import logo2ndStreet from "./assets/figma-2026-10/logo-2nd-street.webp";
+import marketPlan from "./assets/figma-2026-10/market-plan.webp";
 import mobileFooter from "./assets/figma-2026-10/mobile-footer.png";
-import mobileHeroWebp from "./assets/figma-2026-10/mobile-hero.webp";
 import socialInstagram from "./assets/figma-2026-10/social-instagram.png";
 import socialTiktok from "./assets/figma-2026-10/social-tiktok.png";
 import socialWechat from "./assets/figma-2026-10/social-wechat.png";
 import socialWechatQr from "./assets/figma-2026-10/social-wechat-qr.webp";
 import socialXiaohongshu from "./assets/figma-2026-10/social-xiaohongshu.png";
 import supportLogo from "./assets/figma-2026-10/support-logo.webp";
+import tabMainContents from "./assets/figma-2026-10/tab-main-contents.png";
+import tabSpecialContents from "./assets/figma-2026-10/tab-special-contents.png";
+import ticketsCtaDesktop from "./assets/figma-2026-10/tickets-cta-desktop.png";
+import ticketsCtaMobile from "./assets/figma-2026-10/tickets-cta-mobile.png";
 import ticketQr from "./assets/figma-2026-10/ticket-qr.webp";
-import brandWebp from "./assets/optimized/brand.webp";
 import { VenueMap } from "./VenueMap";
 import { VENUE } from "./venue";
 
@@ -26,70 +29,76 @@ const APPLY_HREF = IS_STANDALONE_BUILD
   : "./apply.html";
 
 const workshopItems = [
+  { title: "工作坊 壹", description: "详情介绍" },
+  { title: "工作坊 贰", description: "详情介绍" },
+  { title: "工作坊 叁", description: "详情介绍" },
+] as const;
+
+const fashionShows = [
   {
-    title: "工作坊壹",
-    description: "活动简介",
-    meta: "时间/地点/艺术家",
+    title: "Regular Vintage Fashion Show",
+    date: "2026.12.25 Fri.",
+    time: "15:00 - 15:30",
   },
   {
-    title: "工作坊贰",
-    description: "活动简介",
-    meta: "时间/地点/艺术家",
+    title: "Future Vintage Fashion Show",
+    date: "2026.12.26 Sat.",
+    time: "14:00 - 14:30",
   },
   {
-    title: "工作坊叁",
-    description: "活动简介",
-    meta: "时间/地点/艺术家",
+    title: "Special Vintage Fashion Show",
+    date: "2026.12.26 Sat.",
+    time: "15:30 - 16:00",
   },
 ] as const;
 
-const vendorItems = [
-  { code: "A01", name: "不设季" },
-  { code: "A02", name: "Inner Archive" },
-  { code: "A03", name: "Daddy Farm" },
-  { code: "A04", name: "In Tatters" },
-  { code: "A05", name: "BUY 42" },
-  { code: "B01", name: "Ballo Space" },
-  { code: "B02", name: "Timber Vintage" },
-  { code: "B03", name: "Past Vintage" },
-  { code: "B04", name: "光荣二手" },
-  { code: "B05", name: "Full Moon" },
-  { code: "B06", name: "雅昌印刷" },
-  { code: "B07", name: "Zoom Ink" },
-  { code: "B08", name: "布雷德男士理发" },
-  { code: "B09", name: "世集卡牌" },
-  { code: "B10", name: "Swing Vintage" },
-] as const;
+type Vendor = { name: string; lines?: readonly string[] };
+
+const desktopVendors: readonly Vendor[] = [
+  { name: "Inner Archive" },
+  { name: "Full Moon" },
+  { name: "In Tatters" },
+  { name: "BUY 42" },
+  { name: "不设季" },
+  { name: "Ballo Space" },
+  { name: "Timber Vintage" },
+  { name: "Past Vintage" },
+  { name: "世集卡牌" },
+  { name: "Past Vintage / 布雷德男士理发", lines: ["Past Vintage", "布雷德男士理发"] },
+  { name: "Farm" },
+  { name: "Swing Vintage" },
+  { name: "光荣二手" },
+  { name: "Zoom Ink" },
+  { name: "雅昌印刷" },
+];
+
+const mobileVendors: readonly Vendor[] = [
+  { name: "Inner Archive" },
+  { name: "Daddy Farm" },
+  { name: "In Tatters" },
+  { name: "BUY 42" },
+  { name: "不设季" },
+  { name: "Ballo Space" },
+  { name: "Timber Vintage" },
+  { name: "Past Vintage" },
+  { name: "光荣二手" },
+  { name: "Full Moon" },
+  { name: "世集卡牌" },
+  { name: "Past Vintage / 布雷德男士理发", lines: ["Past Vintage", "布雷德男士理发"] },
+  { name: "Farm" },
+  { name: "Swing Vintage" },
+  { name: "Zoom Ink" },
+  { name: "雅昌印刷" },
+];
+
+const mobileVendorPreviewCount = 9;
 
 const foodItems = [
-  { code: "D01", name: "beko beko" },
-  { code: "D02", name: "巴耶尔的厨房" },
-  { code: "D03", name: "艾薇达" },
-  { code: "D04", name: "Gelato" },
-  { code: "D05", name: "美叮美当" },
-  { code: "D06", name: "安可咖啡" },
-  { code: "D07", name: "起酥面包" },
-  { code: "D08", name: "座位以待" },
-  { code: "D09", name: "座位以待" },
-  { code: "D10", name: "座位以待" },
-] as const;
-
-const mobileVendorItems = [
-  { code: "A01", name: "不设季" },
-  { code: "A02", name: "Inner Archive" },
-  { code: "A03", name: "Daddy Farm" },
-  { code: "A04", name: "In Tatters" },
-  { code: "A05", name: "BUY 42" },
-  { code: "B01", name: "Ballo Space" },
-] as const;
-
-const mobileFoodItems = [
-  { code: "D01", name: "beko beko" },
-  { code: "D02", name: "巴耶尔的厨房" },
-  { code: "D03", name: "艾薇达" },
-  { code: "D04", name: "Gelato" },
-  { code: "D05", name: "美叮美当" },
-  { code: "D06", name: "安可咖啡" },
+  "beko beko",
+  "巴耶尔的厨房",
+  "艾薇达",
+  "Gelato",
+  "安可咖啡",
 ] as const;
 
 const socialItems = [
@@ -98,6 +107,11 @@ const socialItems = [
     label: "66th & 2nd Ave.",
     icon: socialXiaohongshu,
     url: "https://www.xiaohongshu.com/user/profile/6a3671e3000000000f03ac00",
+  },
+  {
+    id: "wechat",
+    label: "巴洛塔",
+    icon: socialWechat,
   },
   {
     id: "instagram",
@@ -111,61 +125,64 @@ const socialItems = [
     icon: socialTiktok,
     url: "https://www.douyin.com/user/MS4wLjABAAAAhrS6VG4Y9wtjpxDhlNe0SuMPU9rIo37IXlNkAEVVnq27763q07Cp1YcDppVmoHKE",
   },
-  {
-    id: "wechat",
-    label: "巴洛塔",
-    icon: socialWechat,
-  },
-] as const;
-
-const fashionShows = [
-  {
-    title: "Regular Vintage Fashion Show",
-    date: {
-      desktop: "2026.12.25 Fri.",
-      mobile: "2026.12.25 Fri",
-    },
-    time: "14:00 - 14:30",
-  },
-  {
-    title: "Future Vintage Fashion Show",
-    date: {
-      desktop: "2026.12.26 Sat.",
-      mobile: "2026.12.26 Sat",
-    },
-    time: "14:00 - 14:30",
-  },
-  {
-    title: "Special Vintage Fashion Show",
-    date: {
-      desktop: "2026.12.27 Sun.",
-      mobile: "2026.12.27 Sun",
-    },
-    time: "14:00 - 14:30",
-  },
 ] as const;
 
 function VendorList({
   items,
   className = "",
 }: {
-  items: readonly { code: string; name: string }[];
+  items: readonly Vendor[];
   className?: string;
 }) {
   return (
     <ul className={`vendor-list ${className}`.trim()}>
-      {items.map((item, index) => (
-        <li className="vendor-item" key={`${item.code}-${index}`}>
-          <span className="vendor-code">{item.code}</span>
-          <span className="vendor-name">{item.name}</span>
+      {items.map((item) => (
+        <li className="vendor-item" key={item.name}>
+          <span className="vendor-swatch" aria-hidden="true" />
+          <span className="vendor-name">
+            {(item.lines ?? [item.name]).map((line) => (
+              <span className="vendor-name__line" key={line}>
+                {line}
+              </span>
+            ))}
+          </span>
         </li>
       ))}
     </ul>
   );
 }
 
+function ContentsDivider({
+  image,
+  label,
+}: {
+  image: string;
+  label: string;
+}) {
+  return (
+    <div className="contents-divider">
+      <span className="contents-divider__rule" aria-hidden="true" />
+      <img
+        className="contents-divider__tab"
+        src={image}
+        width="164"
+        height="48"
+        loading="lazy"
+        decoding="async"
+        alt={label}
+      />
+      <span className="contents-divider__rule" aria-hidden="true" />
+    </div>
+  );
+}
+
+function RuleDivider() {
+  return <div className="rule-divider" aria-hidden="true" />;
+}
+
 function App() {
   const [wechatOpen, setWechatOpen] = useState(false);
+  const [vendorsExpanded, setVendorsExpanded] = useState(false);
   const wechatTriggerRef = useRef<HTMLButtonElement>(null);
   const wechatDialogRef = useRef<HTMLDivElement>(null);
 
@@ -189,249 +206,238 @@ function App() {
     };
   }, [wechatOpen]);
 
+  const visibleMobileVendors = vendorsExpanded
+    ? mobileVendors
+    : mobileVendors.slice(0, mobileVendorPreviewCount);
+
   return (
     <>
       <div className="site" id="top">
         <header className="site-header">
-        <div className="site-header__bar">
-          <a className="brand" href="#top" aria-label="66th & 2nd Ave. 首页">
-            <img
-              src={brandWebp}
-              alt="66th & 2nd Ave. Vintage Fashion Market"
-            />
-          </a>
+          <div className="site-header__stripe" aria-hidden="true" />
+          <div className="site-header__bar">
+            <a className="brand" href="#top" aria-label="66th & 2nd Ave. 首页">
+              <span>66th &amp; 2nd Ave.</span>
+              <span>Vintage Fashion Market &amp; Show</span>
+            </a>
 
-          <nav className="desktop-nav" aria-label="主导航">
+            <nav className="desktop-nav" aria-label="主导航">
+              <a href="#about">About</a>
+              <a href="#market">Vintage market</a>
+              <a href="#workshop">Workshop</a>
+              <a href={APPLY_HREF}>Vendors</a>
+              <a className="nav-tickets" href="#visit">
+                Tickets<span className="arrow" aria-hidden="true">↗</span>
+              </a>
+            </nav>
+          </div>
+
+          <nav className="mobile-nav" aria-label="移动端导航">
             <a href="#about">About</a>
-            <a href="#market">Vintage Market</a>
+            <a href="#market">Vintage market</a>
             <a href="#workshop">Workshop</a>
-            <a href="#fashion">Fashion Show</a>
             <a href={APPLY_HREF}>Vendors</a>
-            <a href="#visit">TICKETS</a>
+            <a className="nav-tickets" href="#visit">
+              Tickets<span className="arrow" aria-hidden="true">↗</span>
+            </a>
           </nav>
-
-          <a className="mobile-ticket" href="#visit">
-            Tickets
-          </a>
-        </div>
-
-        <nav className="mobile-nav" aria-label="移动端导航">
-          <a href="#about">About</a>
-          <a href="#market">Vintage Market</a>
-          <a href="#workshop">Workshop</a>
-          <a href="#fashion">Fashion Show</a>
-          <a href={APPLY_HREF}>Vendors</a>
-        </nav>
         </header>
 
         <main>
-        <section className="campaign" aria-label="活动主视觉">
-          <picture>
-            <source
-              media="(max-width: 899px)"
-              srcSet={mobileHeroWebp}
-            />
-            <img
-              src={campaignDesktop}
-              width="2400"
-              height="1384"
-              fetchPriority="high"
-              alt="66th & 2nd Ave. Vintage Fashion Market，2026.12.25 至 27，深圳华侨城创意文化园北区 C2 展厅"
-            />
-          </picture>
-        </section>
+          <section className="campaign" aria-label="活动主视觉">
+            <picture>
+              <source media="(max-width: 899px)" srcSet={heroMobile} />
+              <img
+                src={heroDesktop}
+                width="1452"
+                height="1066"
+                fetchPriority="high"
+                alt="66th & 2nd Ave. Vintage Fashion Market，2026.12.25 至 27，深圳华侨城创意文化园北区 C2 展厅"
+              />
+            </picture>
+          </section>
 
-        <section className="about" id="about" aria-labelledby="about-title">
-          <h2 id="about-title">About</h2>
-          <div className="about__band">
-            <div className="about__content">
-              <p className="about__title">
-                66th &amp; 2nd Ave.
-                <br />
-                Vintage Fashion Market
-              </p>
-              <p className="about__copy">
-                {
-                  "一个以当代潮流、复古文化、二手商品交易为主题的Vintage Fashion Market。"
-                }
-              </p>
-              <p className="about__copy">
-                {
-                  "市集以纽约上东街区为灵感，集合Vintage Culture、Designer Archive、街头潮流、古着与各一线品牌的二手商品，以现代的购物体验、生活方式为表现形式。我们邀请风格鲜明的店铺相聚深圳，通过售卖、陈列与穿搭，让观众认识货品，了解每家店铺的审美与故事。"
-                }
-              </p>
-              <p className="about__copy about__copy--en">
-                {
-                  "A multidisciplinary creative designer specializing in brand strategy, visual communication, product and spatial design, and event planning. Experienced in fashion weeks, brand launches, and runway shows, with expertise in venue planning, spatial experiences, and art installations. Also the founder of an independent electronic music label and tea brand, continuously exploring the intersection of design, fashion, art, and culture."
-                }
-              </p>
-              <ul className="social-list">
-                {socialItems.map((item) => {
-                  const body = (
-                    <>
-                      <img
-                        className="social-item__icon"
-                        src={item.icon}
-                        alt=""
-                        aria-hidden="true"
-                      />
-                      <span className="social-item__label">{item.label}</span>
-                    </>
-                  );
+          <section className="about" id="about" aria-labelledby="about-title">
+            <a className="tickets-cta" href="#visit" aria-label="购票 Tickets">
+              <picture>
+                <source media="(min-width: 900px)" srcSet={ticketsCtaDesktop} />
+                <img
+                  src={ticketsCtaMobile}
+                  width="204"
+                  height="39"
+                  alt="Tickets"
+                />
+              </picture>
+            </a>
+            <h2 id="about-title">About</h2>
+            <div className="about__band">
+              <div className="about__content">
+                <p className="about__copy">
+                  {"一个以当代潮流、复古文化、二手商品交易为主题的Vintage Fashion Market。"}
+                  <br className="br-desktop" />
+                  {"市集以纽约上东街区为灵感，集合Vintage Culture / Designer Archive / 街头潮流 / 古着与各一线品牌的二手商品，以现代的购物"}
+                  <br className="br-desktop" />
+                  {"物体验、生活方式为表现形式。"}
+                  <br className="br-desktop" />
+                  {"我们邀请风格鲜明的店铺相聚深圳，通过售卖、陈列与穿搭，让观众认识货品，" }
+                  <br className="br-desktop" />
+                  {"了解每家店铺的审美与故事。"}
+                </p>
+                <p className="about__copy about__copy--en">
+                  <span className="about__copy-line">
+                    {"A multidisciplinary creative designer specializing in brand strategy, visual communication, product and spatial design, "}
+                  </span>
+                  <span className="about__copy-line">
+                    {"and event planning. Experienced in fashion weeks, brand launches, and runway shows, with expertise in venue planning, spatial experiences, and art installations. Also "}
+                  </span>
+                  <span className="about__copy-line">
+                    the founder of an independent electronic music label and tea
+                    brand, continuously exploring the intersection of design,
+                    fashion, art, and culture.
+                  </span>
+                </p>
+                <ul className="social-list">
+                  {socialItems.map((item) => {
+                    const body = (
+                      <>
+                        <img
+                          className="social-item__icon"
+                          src={item.icon}
+                          alt=""
+                          aria-hidden="true"
+                        />
+                        <span className="social-item__label">{item.label}</span>
+                      </>
+                    );
 
-                  return (
-                    <li
-                      className={`social-item social-item--${item.id}`}
-                      key={item.id}
-                    >
-                      {"url" in item ? (
-                        <a
-                          className="social-item__link"
-                          href={item.url}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          {body}
-                        </a>
-                      ) : (
-                        <>
-                          <button
-                            ref={wechatTriggerRef}
-                            className="social-item__link social-wechat__trigger"
-                            type="button"
-                            aria-haspopup="dialog"
-                            aria-expanded={wechatOpen}
-                            aria-controls="wechat-dialog"
-                            onClick={() => setWechatOpen(true)}
+                    return (
+                      <li
+                        className={`social-item social-item--${item.id}`}
+                        key={item.id}
+                      >
+                        {"url" in item ? (
+                          <a
+                            className="social-item__link"
+                            href={item.url}
+                            target="_blank"
+                            rel="noreferrer"
                           >
                             {body}
-                          </button>
-                          <div className="wechat-popover" aria-hidden="true">
-                            <img src={socialWechatQr} alt="" />
-                          </div>
-                        </>
-                      )}
-                    </li>
-                  );
-                })}
+                          </a>
+                        ) : (
+                          <>
+                            <button
+                              ref={wechatTriggerRef}
+                              className="social-item__link social-wechat__trigger"
+                              type="button"
+                              aria-haspopup="dialog"
+                              aria-expanded={wechatOpen}
+                              aria-controls="wechat-dialog"
+                              onClick={() => setWechatOpen(true)}
+                            >
+                              {body}
+                            </button>
+                            <div className="wechat-popover" aria-hidden="true">
+                              <img src={socialWechatQr} alt="" />
+                            </div>
+                          </>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <ContentsDivider image={tabMainContents} label="Main Contents" />
+
+          <section className="market" id="market" aria-labelledby="market-title">
+            <h2 id="market-title">Vintage Fashion show</h2>
+
+            <div className="fashion__schedule-text">
+              {fashionShows.map((show) => (
+                <div className="fashion-show" key={show.title}>
+                  <span className="fashion-show__title">{show.title}</span>
+                  <span className="fashion-show__date">
+                    <span className="fashion-show__prefix">Date</span>
+                    <span>{show.date}</span>
+                  </span>
+                  <span className="fashion-show__time">{show.time}</span>
+                </div>
+              ))}
+            </div>
+
+            <picture className="market-plan">
+              <img
+                src={marketPlan}
+                width="882"
+                height="1030"
+                loading="lazy"
+                decoding="async"
+                alt="Vintage Market 场地图，包含 A、B、C 摊位区、美食区、Backstage 和入口"
+              />
+            </picture>
+
+            <div className="vendors">
+              <VendorList
+                items={desktopVendors}
+                className="vendor-list--desktop"
+              />
+              <VendorList
+                items={visibleMobileVendors}
+                className="vendor-list--mobile"
+              />
+              <button
+                className="view-more"
+                type="button"
+                aria-expanded={vendorsExpanded}
+                onClick={() => setVendorsExpanded((value) => !value)}
+              >
+                {vendorsExpanded ? "收起 Less" : "More 查看更多"}
+              </button>
+            </div>
+
+            <div className="food-area">
+              <h3>Food</h3>
+              <ul className="food-list">
+                {foodItems.map((name) => (
+                  <li className="food-item" key={name}>
+                    <span className="vendor-swatch" aria-hidden="true" />
+                    <span className="vendor-name">{name}</span>
+                  </li>
+                ))}
               </ul>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <section className="market" id="market" aria-labelledby="market-title">
-          <div className="market__intro">
-            <h2 id="market-title">Vintage Market</h2>
-            <p>
-              本期有66个摊位聚集于此。
-              <br />
-              汇集各具特色的顶尖二手服装店，收藏家，工作坊，服务商与特色美食。
-            </p>
-          </div>
+          <RuleDivider />
 
-          <div className="market__group">
-            <VendorList
-              items={vendorItems}
-              className="vendor-list--desktop"
-            />
-            <VendorList
-              items={mobileVendorItems}
-              className="vendor-list--mobile"
-            />
-            <a className="view-more" href="#market-plan">
-              查看更多
-            </a>
-          </div>
+          <section
+            className="workshop"
+            id="workshop"
+            aria-labelledby="workshop-title"
+          >
+            <h2 id="workshop-title">Work Shop</h2>
+            <div className="workshop-list">
+              {workshopItems.map((item) => (
+                <article className="workshop-item" key={item.title}>
+                  <h3>{item.title}</h3>
+                  <p>{item.description}</p>
+                </article>
+              ))}
+            </div>
+          </section>
 
-          <picture className="market-plan" id="market-plan">
-            <source media="(min-width: 900px)" srcSet={marketPlanDesktop} />
-            <img
-              src={marketPlanMobile}
-              width="800"
-              height="976"
-              loading="lazy"
-              decoding="async"
-              alt="Vintage Market 场地图，包含 A、B、C 摊位区、美食区和入口"
-            />
-          </picture>
+          <ContentsDivider
+            image={tabSpecialContents}
+            label="Special Contents"
+          />
 
-          <div className="food-area">
-            <h3>美食区</h3>
-            <VendorList
-              items={foodItems}
-              className="vendor-list--food vendor-list--desktop"
-            />
-            <VendorList
-              items={mobileFoodItems}
-              className="vendor-list--food vendor-list--mobile"
-            />
-          </div>
-        </section>
-
-        <section
-          className="workshop"
-          id="workshop"
-          aria-labelledby="workshop-title"
-        >
-          <div className="workshop__intro">
-            <h2 id="workshop-title">Workshop</h2>
-            <p className="workshop__summary">
-              本期有十位艺术家聚集于此。
-              <br />
-              带来时尚，音乐，艺术与疗愈相结合的身心体验
-            </p>
-          </div>
-
-          <div className="workshop-list">
-            {workshopItems.map((item) => (
-              <article className="workshop-item" key={item.title}>
-                <h3>{item.title}</h3>
-                <p className="workshop-item__mobile-copy">{item.description}</p>
-                <p className="workshop-item__meta">{item.meta}</p>
-                <p className="workshop-item__desktop-copy">详细信息</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section
-          className="fashion"
-          id="fashion"
-          aria-labelledby="fashion-title"
-        >
-          <div className="fashion__intro">
-            <h2 id="fashion-title">Fashion Show</h2>
-            <p>时装秀简介</p>
-          </div>
-          <div className="fashion__schedule-text">
-            {fashionShows.map((show) => (
-              <div className="fashion-show" key={show.title}>
-                <span className="fashion-show__title">{show.title}</span>
-                <span className="fashion-show__date">
-                  <span className="fashion-show__prefix">Date</span>
-                  <span className="fashion-show__date-desktop">
-                    {show.date.desktop}
-                  </span>
-                  <span className="fashion-show__date-mobile">
-                    {show.date.mobile}
-                  </span>
-                </span>
-                <span className="fashion-show__time">{show.time}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="visit" id="visit" aria-labelledby="visit-title">
-          <div className="visit__intro">
-            <h2 id="visit-title">
-              <span className="visit__title-mobile">Ticket</span>
-              <span className="visit__title-desktop">Tickets</span>
-            </h2>
-            <p>
-              识别下方小程序码，立刻购票
-              <span className="visit__mobile-period">。</span>
-            </p>
+          <section className="visit" id="visit" aria-labelledby="visit-title">
+            <h2 id="visit-title">Tickets</h2>
+            <p className="visit__eyebrow">立刻购票</p>
+            <p className="visit__lead">识别下方小程序码，立刻购票</p>
             <img
               className="ticket-qr"
               src={ticketQr}
@@ -441,118 +447,117 @@ function App() {
               decoding="async"
               alt="购票小程序码"
             />
-          </div>
 
-          <dl className="event-meta">
-            <div>
-              <dt>DATES / 日期</dt>
-              <dd>2026.12.25 Fri ~ 27 Sun</dd>
-            </div>
-            <div>
-              <dt>OPENING HOURS / 时间</dt>
-              <dd>11:00 ~ 19:00</dd>
-            </div>
-          </dl>
-        </section>
+            <dl className="event-meta">
+              <div>
+                <dt>Date / 日期</dt>
+                <dd>2026.12.25 Fri. - 27 Sun</dd>
+              </div>
+              <div>
+                <dt>Opening Hours / 时间</dt>
+                <dd>11:00 - 19:00</dd>
+              </div>
+            </dl>
+          </section>
 
-        <section className="venue" aria-labelledby="venue-title">
-          <div className="venue__rule" aria-hidden="true" />
-          <h2 className="venue__map-title">Map</h2>
+          <section className="venue" aria-labelledby="venue-title">
+            <h2 className="venue__map-title">Map</h2>
 
-          <div
-            className="venue__map"
-            role="group"
-            aria-label="深圳华侨城创意园 C2 空间位置"
-          >
-            <div className="venue__map-grid" aria-hidden="true" />
-            <VenueMap lat={VENUE.gcj02.lat} lng={VENUE.gcj02.lng} />
-            <div className="venue__map-heading">
-              <p className="venue__map-label">SHENZHEN / 深圳</p>
-              <p className="venue__orientation">N ↑</p>
-            </div>
-            <div className="venue__marker">
-              <img src={locationTarget} alt="" aria-hidden="true" />
-              <p>{VENUE.label}</p>
-            </div>
-            <a
-              className="venue__map-link"
-              href={VENUE.amapUrl}
-              target="_blank"
-              rel="noreferrer"
+            <div
+              className="venue__map"
+              role="group"
+              aria-label="深圳华侨城创意园 C2 空间位置"
             >
-              在高德地图中查看 <span aria-hidden="true">↗</span>
-            </a>
-            <p className="venue__map-credit">© 高德地图</p>
-          </div>
+              <div className="venue__map-grid" aria-hidden="true" />
+              <VenueMap lat={VENUE.gcj02.lat} lng={VENUE.gcj02.lng} />
+              <div className="venue__map-heading">
+                <p className="venue__map-label">SHENZHEN / 深圳</p>
+                <p className="venue__orientation">N ↑</p>
+              </div>
+              <div className="venue__marker">
+                <img src={locationTarget} alt="" aria-hidden="true" />
+                <p>{VENUE.label}</p>
+              </div>
+              <a
+                className="venue__map-link"
+                href={VENUE.amapUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                在高德地图中查看 <span aria-hidden="true">↗</span>
+              </a>
+              <p className="venue__map-credit">© 高德地图</p>
+            </div>
 
-          <div className="venue__address">
-            <h2 id="venue-title">
-              <span className="venue__title-mobile">Address</span>
-            </h2>
-            <div>
-              <p>{VENUE.address}</p>
-              <p className="venue__address-en">
-                Exhibition Hall C2, North Zone, OCT - LOFT,
+            <div className="venue__address">
+              <h2 id="venue-title">Address</h2>
+              <div>
+                <p>{VENUE.address}</p>
+                <p className="venue__address-en">
+                  Exhibition Hall C2, North Zone, OCT Creative Culture Park,
+                  <br />
+                  Nanshan District, Shenzhen City
+                </p>
+              </div>
+            </div>
+
+            <div className="venue__transport">
+              <p className="venue__label venue__label--transport">
+                <span className="venue__label-mobile">GETTING HERE</span>
+                <span className="venue__label-desktop">GETTING HERE / 交通</span>
+              </p>
+              <p>
+                侨城北站B出口，
                 <br />
-                Nanshan District, Shenzhen City.
+                步行约800米侨城东站A出口，
+                <br />
+                随后步行前往创意园北区。
+                <br />
+                <br />
+                华侨城创意文化园公交站
+                <br />
+                <br />
+                华侨城创意文化园
+                <br />
+                南山特色文化街区北区C2地面停车场
               </p>
             </div>
-          </div>
+          </section>
 
-          <div className="venue__transport">
-            <p className="venue__label venue__label--transport">
-              <span className="venue__label-mobile">GETTING HERE</span>
-              <span className="venue__label-desktop">GETTING HERE / 交通</span>
-            </p>
-            <p>
-              侨城北站 B出口，步行约800米
-              <br />
-              侨城东站A出口，随后步行前往创意园北区。
-              <br />
-              <br />
-              华侨城创意文化园公交站
-              <br />
-              <br />
-              华侨城创意文化园南山特色文化街区北区C2地面停车场
-            </p>
-          </div>
-        </section>
+          <RuleDivider />
 
-        <section className="support" aria-labelledby="support-title">
-          <div className="support__intro">
-            <h2 id="support-title">Supported By</h2>
-            <p>合作伙伴</p>
-          </div>
-          <div className="support__logos">
-            <img
-              className="support__logo"
-              src={supportLogo}
-              width="258"
-              height="364"
-              loading="lazy"
-              decoding="async"
-              alt="善淘 BUY 42"
-            />
-            <img
-              className="support__logo support__logo--partner"
-              src={coomenLogo}
-              width="456"
-              height="166"
-              loading="lazy"
-              decoding="async"
-              alt="粗门"
-            />
-            <img
-              className="support__logo support__logo--closing"
-              src={supportLogo}
-              width="258"
-              height="364"
-              loading="lazy"
-              decoding="async"
-              alt="善淘 BUY 42"
-            />
-          </div>
-        </section>
+          <section className="support" aria-labelledby="support-title">
+            <h2 id="support-title">Supported by</h2>
+            <div className="support__logos">
+              <img
+                className="support__logo support__logo--opening"
+                src={logo2ndStreet}
+                width="640"
+                height="248"
+                loading="lazy"
+                decoding="async"
+                alt="2nd STREET"
+              />
+              <img
+                className="support__logo support__logo--partner"
+                src={coomenLogo}
+                width="456"
+                height="166"
+                loading="lazy"
+                decoding="async"
+                alt="粗门"
+              />
+              <img
+                className="support__logo support__logo--closing"
+                src={supportLogo}
+                width="258"
+                height="364"
+                loading="lazy"
+                decoding="async"
+                alt="善淘 BUY 42"
+              />
+            </div>
+          </section>
         </main>
         <footer className="site-footer" aria-hidden="true">
           <picture>

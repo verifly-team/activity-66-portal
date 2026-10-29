@@ -7,7 +7,7 @@ const VENUE_WGS84 = {
 
 const VENUE_LABEL = "华侨城创意园C2空间";
 const VENUE_ADDRESS =
-  "广东省深圳市南山区沙河街道香山街社区香山东街2号东部工业区C2栋";
+  "深圳市 南山区 华侨城创意文化园 北区C2展厅";
 
 const PI = Math.PI;
 const EARTH_A = 6378245.0;

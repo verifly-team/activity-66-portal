@@ -14,8 +14,15 @@
   --sage: #a5c0b5;
   --pink: #e6cada;
   --blue: #6190bf;
+  --body:
+    "Avenir Next", "OPPO Sans 4.0", "PingFang SC", "Noto Sans SC",
+    "Helvetica Neue", Arial, sans-serif;
   --display:
-    "Futura", "Avenir Next Condensed", "Helvetica Neue", Arial, sans-serif;
+    "DIN Condensed", "DIN Alternate", "Avenir Next Condensed", "Arial Narrow",
+    "Helvetica Neue", sans-serif;
+  --headline:
+    "Avenir Next Condensed", "Avenir Next", "Arial Narrow", "Helvetica Neue",
+    Arial, sans-serif;
 }
 
 * {
@@ -82,9 +89,7 @@ dd {
   line-height: 1;
 }
 
-.desktop-nav {
-  display: none;
-}
+/* Header */
 
 .site-header {
   position: relative;
@@ -92,63 +97,76 @@ dd {
   background: var(--white);
 }
 
+.site-header__stripe {
+  width: 100%;
+  height: 3px;
+  margin: 0 auto;
+  background-image: linear-gradient(
+    90deg,
+    #e1e1e0 0 20%,
+    #000000 20% 40%,
+    #e1e1e0 40% 60%,
+    #000000 60% 80%,
+    #e1e1e0 80% 100%
+  );
+}
+
 .site-header__bar {
   display: flex;
-  height: 76px;
+  height: 42px;
   align-items: center;
   justify-content: space-between;
-  padding-inline: 20px;
+  gap: 16px;
+  padding-inline: 18px;
 }
 
 .brand {
-  display: block;
-  width: 78px;
-  height: 48px;
-}
-
-.brand picture {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.brand img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.mobile-ticket {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 11px;
-  font-weight: 600;
+  display: grid;
+  font-family: var(--display);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.05;
   white-space: nowrap;
+}
+
+.desktop-nav {
+  display: none;
 }
 
 .mobile-nav {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: flex-start;
-  gap: 18px;
-  padding: 0 20px 18px;
-  overflow-x: auto;
-  font-size: 9px;
-  font-weight: 700;
+  gap: clamp(14px, 6.4vw, 25px);
+  padding: 0 18px 10px;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(9px, 2.56vw, 10px);
+  font-weight: 400;
   line-height: 1.2;
-  scrollbar-width: none;
   white-space: nowrap;
 }
 
-.mobile-nav::-webkit-scrollbar {
-  display: none;
+.nav-tickets {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
 }
 
+.nav-tickets .arrow {
+  margin-left: 1px;
+}
+
+.mobile-nav a:hover,
+.desktop-nav a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* Hero */
+
 .campaign {
-  width: 100%;
-  overflow: hidden;
-  background: var(--blue);
+  display: block;
+  background: var(--white);
 }
 
 .campaign picture,
@@ -158,94 +176,91 @@ dd {
 }
 
 .campaign img {
-  width: 100%;
   height: auto;
 }
 
-.vendor-list--desktop {
-  display: none;
-}
-
-.quick-ticket {
-  padding: 28px 20px;
-  background: var(--white);
-}
-
-.quick-ticket a {
-  display: flex;
-  height: 50px;
-  align-items: center;
-  gap: 10px;
-  padding-inline: 22px;
-  background: var(--sage);
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.quick-ticket .arrow {
-  font-size: 21px;
-}
+/* About */
 
 .about {
   display: grid;
-  gap: 32px;
-  min-height: 546px;
-  padding: 64px 20px;
+  justify-items: center;
+  padding: 36px 32px 0;
   background: var(--white);
 }
 
-.about h2,
-.market h2,
-.workshop h2,
-.fashion h2,
-.visit h2,
-.venue__address h2,
-.support h2 {
-  font-family: var(--display);
-  font-weight: 700;
-  line-height: 1.02;
-  text-align: center;
+.tickets-cta {
+  display: block;
+  line-height: 0;
+  cursor: pointer;
+}
+
+.tickets-cta img {
+  width: 66px;
+  height: auto;
 }
 
 .about h2 {
-  font-size: 39px;
-  line-height: 1.08;
+  margin-top: 38px;
+  font-family: var(--headline);
+  font-size: 34px;
+  font-weight: 400;
+  line-height: 1;
+  text-align: center;
+  transform: scaleX(0.82);
+  transform-origin: center;
+}
+
+.about__band {
+  display: block;
+  width: 100%;
 }
 
 .about__content {
   display: grid;
-  gap: 24px;
-  padding-top: 8px;
-  text-align: center;
-}
-
-.about__title {
-  font-family: var(--display);
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1.15;
+  justify-items: center;
+  margin-top: 28px;
 }
 
 .about__copy {
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 1.8;
+  width: 100%;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.about__copy--en {
+  margin-top: 24px;
+  font-size: 13.5px;
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+.about__copy-line {
+  display: contents;
+}
+
+@media (max-width: 899px) {
+  .br-desktop {
+    display: none;
+  }
 }
 
 .social-list {
   display: grid;
-  justify-items: start;
   gap: 26px;
-  margin: 6px 0 0;
+  margin: 40px 0 0;
   padding: 0;
   list-style: none;
 }
 
 .social-item__link {
   display: grid;
-  grid-template-columns: 72px auto;
+  width: 250px;
+  grid-template-columns: 46px auto;
   align-items: center;
-  gap: 20px;
+  gap: 12px;
+  text-align: left;
 }
 
 button.social-item__link {
@@ -253,7 +268,6 @@ button.social-item__link {
   border: 0;
   background: transparent;
   color: inherit;
-  text-align: left;
   cursor: pointer;
 }
 
@@ -264,27 +278,16 @@ button.social-item__link {
 }
 
 .social-item__icon {
-  justify-self: start;
-  width: auto;
-  height: 34px;
+  width: 46px;
+  height: 30px;
+  object-fit: contain;
 }
 
 .social-item__label {
-  font-size: 15px;
+  font-family: var(--body);
+  font-size: 14px;
   line-height: 1.2;
   white-space: nowrap;
-}
-
-.social-item--wechat {
-  order: 2;
-}
-
-.social-item--instagram {
-  order: 3;
-}
-
-.social-item--douyin {
-  order: 4;
 }
 
 .social-item--wechat {
@@ -373,76 +376,114 @@ button.social-item__link {
   line-height: 1.2;
 }
 
+/* Section dividers */
+
+.contents-divider {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-top: 64px;
+}
+
+.contents-divider__rule {
+  flex: 1;
+  height: 1px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    #4d4d4b 0 3px,
+    transparent 3px 7px
+  );
+}
+
+.contents-divider__tab {
+  flex: none;
+  width: auto;
+  height: 16px;
+}
+
+.rule-divider {
+  width: 100%;
+  height: 3px;
+  margin: 59px auto 0;
+  background-image: linear-gradient(
+    90deg,
+    #e1e1e0 0 20%,
+    #000000 20% 40%,
+    #e1e1e0 40% 60%,
+    #000000 60% 80%,
+    #e1e1e0 80% 100%
+  );
+}
+
+/* Vintage Fashion show */
+
 .market {
   display: grid;
-  gap: 41px;
-  padding: 0 20px 15px;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  padding: 62px 32px 0;
   background: var(--white);
 }
 
-.market__intro {
-  display: grid;
-  gap: 20px;
-}
-
 .market h2 {
-  font-size: 40px;
-  line-height: 1.15;
-  text-align: left;
-}
-
-.market__intro p {
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 1.8;
+  font-family: var(--headline);
+  font-size: 34px;
+  font-weight: 400;
+  line-height: 1;
   text-align: center;
+  transform: scaleX(0.82);
+  transform-origin: center;
 }
 
-.market__group,
-.food-area {
+.fashion__schedule-text {
   display: grid;
-  gap: 41px;
-}
-
-.market__group {
-  gap: 25px;
-  padding-block: 24px 40px;
-}
-
-.placeholder-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 52px 40px;
+  gap: 4px;
   width: 100%;
+  margin-top: 56px;
 }
 
-.placeholder-grid.placeholder-grid--desktop {
-  display: none;
+.fashion-show {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  justify-content: space-between;
+  column-gap: 8px;
+  font-family: var(--headline);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 15px;
+  color: #4a4a48;
+  white-space: nowrap;
 }
 
-.placeholder-grid span {
-  display: block;
-  height: 0;
-  padding-bottom: 93.0556%;
-  border-radius: 12px;
-  background: var(--blue);
+.fashion-show__title,
+.fashion-show__date,
+.fashion-show__time {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
 }
 
-.view-more {
-  justify-self: center;
-  font-size: 20px;
-  font-weight: 600;
-  line-height: 46px;
+.fashion-show__title::before,
+.fashion-show__date::before,
+.fashion-show__time::before {
+  width: 9px;
+  height: 2px;
+  flex: none;
+  background: var(--ink);
+  content: "";
 }
 
-.view-more:hover {
-  text-decoration: underline;
-  text-underline-offset: 4px;
+.fashion-show__prefix {
+  margin-right: 9px;
 }
 
 .market-plan {
   display: block;
-  width: 100%;
+  width: 287px;
+  max-width: 100%;
+  margin-top: 32px;
 }
 
 .market-plan img {
@@ -450,185 +491,275 @@ button.social-item__link {
   height: auto;
 }
 
-.food-area {
-  gap: 11px;
-  min-height: 490px;
+.vendors {
+  display: grid;
+  justify-items: center;
+  width: 100%;
+  min-width: 0;
+  margin-top: 96px;
+}
+
+.vendor-list {
+  display: grid;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vendor-list--desktop {
+  display: none;
+}
+
+.vendor-list--mobile {
+  width: min(282px, 100%);
+  min-width: 0;
+  grid-template-columns: repeat(3, 37px);
+  justify-content: space-between;
+  column-gap: 0;
+  row-gap: 31px;
+}
+
+.vendor-item,
+.food-item {
+  display: grid;
+  justify-items: center;
   align-content: start;
+  gap: 8px;
+}
+
+.vendor-swatch {
+  display: block;
+  width: 37px;
+  height: 17px;
+  background: #4a2b1d;
+}
+
+.vendor-name {
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.vendor-name__line {
+  display: block;
+  white-space: nowrap;
+}
+
+.view-more {
+  margin-top: 37px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.view-more:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.food-area {
+  display: grid;
+  justify-items: center;
+  width: 100%;
+  margin-top: 44px;
 }
 
 .food-area h3 {
-  font-size: 20px;
-  font-weight: 600;
-  line-height: 46px;
+  font-family: var(--body);
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.2;
   text-align: center;
 }
 
-.workshop,
-.fashion,
-.visit {
+.food-list {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(3, 37px);
+  justify-content: space-between;
+  column-gap: 0;
+  row-gap: 32px;
+  margin: 26px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (max-width: 899px) {
+  .food-area {
+    display: none;
+  }
+
+  .venue__label--transport {
+    display: none;
+  }
+
+  .venue .venue__address > div > p:first-child {
+    font-size: 13px;
+  }
+
+  .venue .venue__address-en {
+    margin-top: 0;
+    font-size: 8.5px;
+    line-height: 1.3;
+  }
+
+  .venue .venue__address > div {
+    gap: 2px;
+  }
+
+  .venue .venue__transport {
+    margin-top: 2px;
+  }
+
+  .venue .venue__transport > p:last-child {
+    font-size: 11px;
+    line-height: 1.3;
+  }
+
+  .workshop + .contents-divider {
+    margin-top: 60px;
+  }
+
+  .workshop-item:last-child {
+    margin-top: -9px;
+  }
+}
+
+/* Work Shop */
+
+.workshop {
   display: grid;
   justify-items: center;
+  padding: 62px 32px 0;
   background: var(--white);
 }
 
-.workshop {
-  gap: 32px;
-  padding: 64px 20px;
-}
-
-.workshop h2,
-.fashion h2,
-.visit h2 {
-  font-size: 40px;
-}
-
-.workshop__intro,
-.fashion__intro,
-.visit__intro {
-  display: grid;
-  justify-items: center;
-  gap: 24px;
-  width: 100%;
-}
-
-.workshop__summary,
-.fashion__intro p,
-.visit__intro > p {
-  font-size: 16px;
-  line-height: 1.6;
+.workshop h2 {
+  font-family: var(--headline);
+  font-size: 34px;
+  font-weight: 400;
+  line-height: 1;
   text-align: center;
-}
-
-.workshop__summary {
-  min-height: 78px;
-}
-
-.visit__mobile-period {
-  display: inline;
+  transform: scaleX(0.82);
+  transform-origin: center;
 }
 
 .workshop-list {
   display: grid;
-  width: 100%;
+  gap: 16px;
+  margin-top: 21px;
+  text-align: center;
 }
 
 .workshop-item {
   display: grid;
-  gap: 12px;
-  padding-bottom: 24px;
-  text-align: left;
+  gap: 4px;
 }
 
 .workshop-item h3 {
-  font-size: 30px;
+  font-size: 15px;
   font-weight: 500;
-  line-height: 35px;
+  line-height: 1.5;
 }
 
 .workshop-item p {
-  font-size: 14px;
-  line-height: 22px;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.5;
 }
 
-.workshop-item .workshop-item__meta {
-  font-size: 10px;
-  line-height: 12px;
-}
-
-.workshop-item__desktop-copy {
-  display: none;
-}
-
-.fashion {
-  align-content: start;
-  gap: 94px;
-  min-height: 569px;
-  padding: 64px 20px;
-}
-
-.fashion__schedule {
-  display: block;
-  width: 100%;
-}
-
-.fashion__schedule img {
-  width: 100%;
-  height: auto;
-}
-
-.fashion-show__date-mobile {
-  display: none;
-}
+/* Tickets */
 
 .visit {
-  gap: 36px;
-  padding: 64px 20px;
-  background: var(--sage);
-}
-
-.ticket-card {
-  display: flex;
-  width: min(267px, 100%);
-  height: 245px;
-  align-items: center;
-  gap: 20px;
-  padding-inline: 22px;
-  background: var(--white);
-  color: var(--ink);
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1.3;
-  text-align: left;
-}
-
-.ticket-card .arrow {
-  flex: none;
-  font-size: 21px;
-}
-
-.event-meta {
   display: grid;
-  gap: 0;
-  width: min(350px, 100%);
+  justify-items: center;
+  padding: 95px 32px 0;
+  background: var(--white);
   text-align: center;
 }
 
-.event-meta div {
-  padding-block: 24px;
+.visit h2 {
+  font-family: var(--headline);
+  font-size: 34px;
+  font-weight: 400;
+  line-height: 1;
+  transform: scaleX(0.82);
+  transform-origin: center;
 }
 
-.event-meta dt {
-  font-size: 20px;
+.visit__eyebrow {
+  margin-top: 22px;
+  font-size: 13px;
   font-weight: 500;
   line-height: 1.4;
 }
 
-.event-meta dd {
-  margin-top: 12px;
-  font-size: 16px;
-  line-height: 1.2;
+.visit__lead {
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.4;
 }
+
+.ticket-qr {
+  width: 116px;
+  height: 116px;
+  margin-top: 14px;
+}
+
+.event-meta {
+  display: grid;
+  gap: 18px;
+  margin-top: 34px;
+  text-align: center;
+}
+
+.event-meta dt {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.event-meta dd {
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+/* Map */
 
 .venue {
   display: flex;
   flex-direction: column;
-  gap: 30px;
-  padding: 0 20px 62px;
+  align-items: center;
+  padding: 83px 32px 0;
   background: var(--white);
 }
 
-.venue__rule {
-  height: 1px;
-  background: var(--line);
+.venue__map-title {
+  font-family: var(--headline);
+  font-size: 34px;
+  font-weight: 400;
+  line-height: 1;
+  text-align: center;
+  transform: scaleX(0.82);
+  transform-origin: center;
 }
 
 .venue__map {
   position: relative;
-  order: 1;
   width: 100%;
-  height: 310px;
+  aspect-ratio: 1 / 1;
+  margin-top: 26px;
   overflow: hidden;
-  padding: 20px;
+  padding: 18px;
   background: #808080;
   color: var(--paper);
 }
@@ -640,8 +771,8 @@ button.social-item__link {
   background-image:
     linear-gradient(90deg, rgba(243, 241, 235, 0.9) 1px, transparent 1px),
     linear-gradient(rgba(243, 241, 235, 0.9) 1px, transparent 1px);
-  background-position: 24px 20px;
-  background-size: 114px 86px;
+  background-position: 0 0;
+  background-size: 33.333% 33.333%;
   transition: opacity 300ms ease;
 }
 
@@ -679,15 +810,6 @@ button.social-item__link {
   background: rgba(128, 128, 128, 0.5);
 }
 
-.venue__map-label {
-  position: relative;
-  z-index: 3;
-  font-size: 11px;
-  font-weight: 500;
-  line-height: 1.4;
-  text-shadow: 0 1px 10px rgba(72, 72, 72, 0.75);
-}
-
 .venue__map-heading {
   position: relative;
   z-index: 3;
@@ -697,13 +819,21 @@ button.social-item__link {
   gap: 24px;
 }
 
-.venue__orientation {
-  display: none;
-  font-family: var(--display);
+.venue__map-label {
   font-size: 11px;
   font-weight: 500;
+  line-height: 1.4;
+  text-shadow: 0 1px 10px rgba(72, 72, 72, 0.75);
+}
+
+.venue__orientation {
+  position: relative;
+  z-index: 3;
+  font-family: var(--display);
+  font-size: 11px;
   line-height: 1.2;
   white-space: nowrap;
+  text-shadow: 0 1px 10px rgba(72, 72, 72, 0.75);
 }
 
 .venue__marker {
@@ -728,20 +858,20 @@ button.social-item__link {
   border-radius: 50%;
   box-shadow:
     0 0 0 6px rgba(243, 241, 235, 0.24),
-    0 0 0 14px rgba(243, 241, 235, 0.10);
+    0 0 0 14px rgba(243, 241, 235, 0.1);
 }
 
 .venue__marker p {
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 500;
-  line-height: 1.25;
+  line-height: 1.3;
   text-shadow: 0 1px 14px rgba(72, 72, 72, 0.9);
 }
 
 .venue__map-link {
   position: absolute;
   bottom: 18px;
-  left: 20px;
+  left: 18px;
   z-index: 3;
   display: inline-flex;
   align-items: center;
@@ -757,7 +887,7 @@ button.social-item__link {
 
 .venue__map-credit {
   position: absolute;
-  right: 20px;
+  right: 18px;
   bottom: 18px;
   z-index: 3;
   font-size: 9px;
@@ -769,92 +899,114 @@ button.social-item__link {
 .venue__address,
 .venue__transport {
   display: grid;
-  gap: 10px;
+  gap: 8px;
+  width: 100%;
   text-align: center;
 }
 
 .venue__address {
-  order: 2;
-  gap: 24px;
-}
-
-.venue__transport {
-  order: 3;
+  margin-top: 23px;
 }
 
 .venue__address h2 {
-  font-size: 40px;
-}
-
-.venue__address > div,
-.venue__transport {
-  display: grid;
-  gap: 10px;
+  display: none;
 }
 
 .venue__label {
-  font-size: 20px;
+  font-size: 15px;
   font-weight: 500;
   line-height: 1.4;
 }
 
-.venue__address > div > p:last-child,
-.venue__transport > p:last-child {
-  font-size: 16px;
-  line-height: 1.6;
+.venue__address > div > p:first-child,
+.venue__address-en {
+  font-size: 14px;
+  line-height: 1.45;
 }
+
+.venue__address-en {
+  margin-top: 4px;
+}
+
+.venue__transport {
+  margin-top: 12px;
+}
+
+.venue__transport > p:last-child {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Supported by */
 
 .support {
   display: grid;
-  align-content: start;
-  gap: 48px;
-  min-height: 569px;
-  padding: 64px 20px;
+  justify-items: center;
+  padding: 44px 32px 0;
   background: var(--white);
 }
 
-.support__intro {
-  display: grid;
-  gap: 24px;
-}
-
 .support h2 {
-  font-size: 40px;
-}
-
-.support__intro p {
-  font-size: 16px;
-  line-height: 1.6;
+  font-family: var(--headline);
+  font-size: 34px;
+  font-weight: 400;
+  line-height: 1;
   text-align: center;
+  transform: scaleX(0.82);
+  transform-origin: center;
 }
 
 .support__logos {
-  position: relative;
-  width: 235px;
-  height: 82px;
-  margin-right: auto;
+  display: flex;
+  width: 276px;
+  max-width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0;
+  margin-top: 36px;
 }
 
 .support__logo {
   display: block;
-  width: 58px;
-  height: 82px;
+  width: auto;
+  height: auto;
   object-fit: contain;
 }
 
+.support__logo--opening {
+  width: 70px;
+}
+
 .support__logo--partner {
-  position: absolute;
-  top: 19px;
-  left: 114px;
-  width: 121px;
-  height: 44px;
+  width: 47px;
+}
+
+.support__logo--closing {
+  width: 20px;
+}
+
+.site-footer {
+  display: block;
+  width: 100%;
+  margin-top: 58px;
+  background: #040101;
+}
+
+.site-footer picture,
+.site-footer img {
+  display: block;
+  width: 100%;
+}
+
+.site-footer img {
+  height: auto;
 }
 
 @media (hover: hover) and (pointer: fine) and (min-width: 900px) {
   .wechat-popover {
     position: absolute;
-    bottom: calc(100% + 16px);
-    left: 50%;
+    top: 50%;
+    left: calc(100% + 40px);
     z-index: 20;
     display: grid;
     width: 238px;
@@ -865,7 +1017,7 @@ button.social-item__link {
     border: 1px solid var(--line);
     box-shadow: 0 14px 44px rgba(25, 25, 23, 0.16);
     opacity: 0;
-    transform: translate(-50%, 6px);
+    transform: translate(6px, -50%);
     transition:
       opacity 160ms ease,
       transform 160ms ease,
@@ -876,448 +1028,435 @@ button.social-item__link {
   .social-item--wechat:focus-within .wechat-popover {
     visibility: visible;
     opacity: 1;
-    transform: translate(-50%, 0);
+    transform: translate(0, -50%);
   }
 
   .wechat-popover img {
     width: 100%;
     height: auto;
   }
-
-}
-
-@media (hover: hover) and (pointer: fine) and (min-width: 1200px) {
-  .wechat-popover {
-    top: 50%;
-    bottom: auto;
-    left: calc(100% + 40px);
-    transform: translate(6px, -50%);
-  }
-
-  .social-item--wechat:hover .wechat-popover,
-  .social-item--wechat:focus-within .wechat-popover {
-    transform: translate(0, -50%);
-  }
 }
 
 @media (min-width: 600px) and (max-width: 899px) {
   .site-header__bar,
   .mobile-nav,
-  .quick-ticket,
   .about,
   .market,
   .workshop,
-  .fashion,
   .visit,
   .venue,
   .support {
     padding-inline: 32px;
   }
 
-  .placeholder-grid {
-    gap: 48px 32px;
+  .about__copy,
+  .about__content,
+  .fashion__schedule-text,
+  .vendors,
+  .food-area,
+  .venue__address,
+  .venue__transport {
+    width: min(560px, 100%);
+    margin-inline: auto;
+  }
+
+  .vendor-list--mobile,
+  .food-list {
+    column-gap: 24px;
+  }
+
+  .mobile-nav {
+    gap: 30px;
+    font-size: 13px;
   }
 }
 
-@media (min-width: 900px) {
-  .mobile-ticket,
-  .mobile-nav,
-  .quick-ticket,
-  .placeholder-grid--mobile,
-  .workshop__summary,
-  .fashion__intro p,
-  .vendor-list--mobile,
-  .visit__title-mobile,
-  .venue__title-mobile,
-  .venue__label-mobile {
-    display: none;
-  }
+/* Desktop */
 
-  .visit__title-desktop,
-  .venue__title-desktop,
-  .venue__label-desktop {
-    display: inline;
+@media (min-width: 900px) {
+  .mobile-nav {
+    display: none;
   }
 
   .desktop-nav {
     display: flex;
     align-items: center;
-    gap: 40px;
-    font-size: 16px;
-    font-weight: 500;
+    gap: 46px;
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    font-size: 17px;
+    font-weight: 400;
     line-height: 1.2;
     white-space: nowrap;
   }
 
-  .desktop-nav a:hover {
-    text-decoration: underline;
-    text-underline-offset: 4px;
-  }
-
-  .desktop-nav .arrow {
-    margin-left: 2px;
-    font-size: 16px;
+  .site-header__stripe {
+    width: 1200px;
+    max-width: calc(100% - 240px);
   }
 
   .site-header__bar {
-    height: 100px;
-    padding-inline: 48px;
+    height: 94px;
+    padding-inline: 120px;
   }
 
   .brand {
-    width: 84px;
-    height: 59px;
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
+  .campaign {
+    display: grid;
+    height: 720px;
+    place-items: center;
+  }
+
+  .campaign picture {
+    display: block;
+    width: auto;
   }
 
   .campaign img {
+    width: 512px;
     height: auto;
-    aspect-ratio: 1440 / 830;
-    object-fit: cover;
-    object-position: center;
   }
 
   .about {
-    align-content: start;
-    gap: 56px;
-    min-height: 894px;
-    padding: 100px 0;
+    padding: 184px 0 0;
+  }
+
+  .tickets-cta img {
+    width: 126px;
   }
 
   .about h2 {
-    font-family: "Avenir Next", "Helvetica Neue", Arial, sans-serif;
-    font-size: 64px;
-    font-weight: 400;
-    line-height: 1;
+    margin-top: 100px;
+    font-size: 60px;
   }
 
   .about__band {
-    display: flex;
-    min-height: 0;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 0 48px;
-    background: var(--white);
+    width: 100%;
   }
 
   .about__content {
-    width: min(620px, 100%);
-    gap: 40px;
-    padding-top: 0;
-  }
-
-  .about__title {
-    display: none;
-    font-size: 38px;
-    font-weight: 400;
-    line-height: 1.3;
+    margin-top: 132px;
   }
 
   .about__copy {
-    font-size: 16px;
-    font-weight: 400;
-    line-height: 1.8;
-  }
-
-  .social-list {
-    grid-template-columns: 395px minmax(0, 1fr);
-    justify-items: start;
-    gap: 46px 0;
-    width: min(640px, 100%);
-    margin: 16px auto 0;
-  }
-
-  .social-item {
-    order: 0;
-  }
-
-  .social-item__link {
-    grid-template-columns: 100px auto;
-    gap: 40px;
-  }
-
-  .social-item__icon {
-    justify-self: start;
-    height: 50px;
-  }
-
-  .social-item__label {
-    font-size: 16px;
-  }
-
-  .market {
-    gap: 125px;
-    padding: 22px 0 112px;
-  }
-
-  .market__intro {
-    gap: 58px;
-    min-height: 0;
-    align-content: start;
-  }
-
-  .market h2,
-  .workshop h2,
-  .fashion h2,
-  .visit h2,
-  .venue__map-title,
-  .support h2 {
-    font-family: "Avenir Next", "Helvetica Neue", Arial, sans-serif;
-    font-size: 64px;
-    font-weight: 400;
-    line-height: 1.05;
-    letter-spacing: 0;
-    text-align: center;
-  }
-
-  .market__intro p {
-    width: min(900px, 100%);
-    margin: 0 auto;
-    font-size: 16px;
-    font-weight: 400;
-    line-height: 1.8;
-  }
-
-  .market__group,
-  .food-area {
-    gap: 58px;
-  }
-
-  .market__group {
-    gap: 122px;
-    padding: 0;
-    margin-top: 36px;
-  }
-
-  .vendor-list.vendor-list--desktop {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    column-gap: 0;
-    row-gap: 32px;
-    width: min(1264px, calc(100% - 96px));
-    margin: 0 auto;
-  }
-
-  .vendor-list--desktop .vendor-item {
-    display: grid;
-    justify-items: center;
-    gap: 14px;
-  }
-
-  .vendor-list--desktop .vendor-code {
-    display: inline-flex;
-    width: 129px;
-    height: 50px;
-    flex: none;
-    align-items: center;
-    justify-content: center;
-    background: #482418;
-    color: var(--white);
-    font-size: 16px;
-  }
-
-  .vendor-list--desktop .vendor-name {
-    text-align: center;
-    font-size: 16px;
-    line-height: 1.2;
-    white-space: nowrap;
-  }
-
-  .view-more {
+    width: 1190px;
+    max-width: calc(100% - 96px);
+    font-family: var(--body);
     font-size: 20px;
-    line-height: 35px;
+    font-weight: 600;
+    line-height: 28px;
   }
 
-  .market-plan {
-    width: min(1000px, calc(100% - 96px));
-    margin: 0 auto;
-  }
-
-  .market-plan img {
-    width: 100%;
-    height: auto;
-    aspect-ratio: 1000 / 836;
-    object-fit: fill;
-  }
-
-  .food-area {
-    gap: 41px;
-    min-height: 0;
-    margin-top: 21px;
-    align-content: start;
-  }
-
-  .food-area h3 {
-    font-size: 20px;
-    font-weight: 500;
-  }
-
-  .workshop {
-    align-content: start;
-    gap: 126px;
-    min-height: 805px;
-    padding: 96px 0;
-    background: var(--white);
-  }
-
-  .workshop-list {
-    width: min(636px, calc(100% - 96px));
-    gap: 40px;
-    margin: 0 auto;
-  }
-
-  .workshop-item {
-    justify-items: center;
-    align-content: start;
-    gap: 19px;
-    padding-bottom: 0;
-    text-align: center;
-  }
-
-  .workshop-item h3 {
-    font-size: 34px;
+  .about__copy--en {
+    width: 1220px;
+    margin-top: 40px;
+    font-size: 15.6px;
     font-weight: 400;
-    line-height: 1.5;
+    line-height: 31px;
   }
 
-  .workshop-item p {
-    font-size: 14px;
-  }
-
-  .workshop-item__mobile-copy,
-  .workshop-item__meta {
-    display: none;
-  }
-
-  .workshop-item__desktop-copy {
+  .about__copy-line {
     display: block;
   }
 
-  .fashion {
-    gap: 48px;
-    min-height: 592px;
-    padding: 96px 48px;
-    align-content: start;
-    background: var(--white);
+  .social-list {
+    display: flex;
+    width: 1206px;
+    max-width: calc(100% - 120px);
+    align-items: center;
+    justify-content: space-between;
+    gap: 0;
+    margin-top: 105px;
   }
 
-  .fashion__intro {
-    min-height: 0;
-    align-content: start;
+  .social-item__link {
+    display: flex;
+    width: auto;
+    align-items: center;
+    gap: 44px;
   }
 
-  .fashion h2 {
-    position: static;
-    text-transform: none;
+  .social-item__icon {
+    width: auto;
+    height: 57px;
+  }
+
+  .social-item--xiaohongshu .social-item__icon {
+    height: 46px;
+  }
+
+  .social-item--xiaohongshu {
+    order: 1;
+  }
+
+  .social-item--douyin {
+    order: 2;
+  }
+
+  .social-item--wechat {
+    order: 3;
+  }
+
+  .social-item--instagram {
+    order: 4;
+  }
+
+  .social-item__label {
+    font-size: 20px;
+  }
+
+  .contents-divider {
+    margin-top: 149px;
+  }
+
+  .contents-divider__tab {
+    height: 32px;
+  }
+
+  .market {
+    padding: 155px 0 0;
+  }
+
+  .market h2 {
+    font-size: 60px;
   }
 
   .fashion__schedule-text {
-    display: grid;
-    gap: 10px;
-    width: min(1157px, 100%);
-    margin: 0 auto;
+    gap: 0;
+    width: 758px;
+    max-width: calc(100% - 96px);
+    margin-top: 46px;
   }
 
   .fashion-show {
-    display: grid;
-    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr) minmax(0, 0.58fr);
-    align-items: center;
-    color: #b7b7b7;
-    font-family: "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+    grid-template-columns: 330px 281px 1fr;
+    justify-content: stretch;
+    column-gap: 0;
     font-size: 24px;
-    line-height: 1.4;
-    text-align: left;
+    line-height: 30px;
+    color: var(--ink);
   }
 
   .fashion-show__title,
   .fashion-show__date,
   .fashion-show__time {
-    display: inline-flex;
-    align-items: center;
-    gap: 16px;
-    white-space: nowrap;
+    gap: 41px;
   }
 
   .fashion-show__title::before,
   .fashion-show__date::before,
   .fashion-show__time::before {
-    width: 40px;
+    width: 18px;
     height: 4px;
-    flex: none;
-    background: var(--ink);
-    content: "";
   }
 
   .fashion-show__prefix {
-    margin-right: 10px;
+    margin-right: 0;
   }
 
-  .visit {
-    gap: 42px;
-    padding: 112px 0 120px;
-    background: var(--white);
+  .fashion-show__date {
+    gap: 24px;
   }
 
-  .visit__intro {
-    gap: 48px;
+  .market-plan {
+    width: 700px;
+    max-width: calc(100% - 96px);
+    margin-top: 54px;
   }
 
-  .visit__intro > p {
-    margin-top: 0;
-    font-size: 16px;
-    line-height: 1.6;
+  .vendors {
+    margin-top: 197px;
   }
 
-  .visit__mobile-period {
+  .vendor-list--desktop {
+    display: grid;
+    width: 758px;
+    max-width: calc(100% - 96px);
+    grid-template-columns: repeat(5, 59px);
+    justify-content: space-between;
+    column-gap: 0;
+    grid-auto-rows: 46px;
+    row-gap: 62px;
+  }
+
+  .vendor-list--mobile {
     display: none;
   }
 
+  .vendor-item,
+  .food-item {
+    gap: 8px;
+  }
+
+  .vendor-item .vendor-swatch {
+    width: 59px;
+    height: 25px;
+  }
+
+  .vendor-name {
+    font-family: var(--body);
+    font-size: 13px;
+  }
+
+  .view-more {
+    display: none;
+  }
+
+  .food-area {
+    margin-top: 44px;
+  }
+
+  .food-area h3 {
+    font-size: 24px;
+    font-weight: 500;
+  }
+
+  .food-list {
+    width: 758px;
+    max-width: calc(100% - 96px);
+    grid-template-columns: repeat(5, 59px);
+    justify-content: space-between;
+    column-gap: 0;
+    row-gap: 0;
+    margin-top: 32px;
+  }
+
+  .food-item .vendor-swatch {
+    width: 59px;
+    height: 25px;
+  background: #000000;
+  }
+
+  .rule-divider {
+    width: 1200px;
+    max-width: calc(100% - 240px);
+    margin-top: 199px;
+  }
+
+  .venue + .rule-divider {
+    margin-top: 214px;
+  }
+
+  .workshop {
+    padding: 128px 0 0;
+  }
+
+  .workshop h2 {
+    font-size: 60px;
+  }
+
+  .workshop-list {
+    gap: 111px;
+    margin-top: 120px;
+  }
+
+  .workshop + .contents-divider {
+    margin-top: 110px;
+  }
+
+  .workshop-item {
+    gap: 30px;
+  }
+
+  .workshop-item h3,
+  .workshop-item p {
+    font-size: 17px;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  .visit {
+    padding: 138px 0 0;
+  }
+
+  .visit h2 {
+    font-size: 60px;
+  }
+
+  .visit__eyebrow {
+    margin-top: 31px;
+    font-size: 16px;
+  }
+
+  .visit__lead {
+    margin-top: 44px;
+    font-size: 16px;
+  }
+
   .ticket-qr {
-    display: block;
-    width: 182px;
-    height: 182px;
-    margin: 0;
+    width: 274px;
+    height: 274px;
+    margin-top: 54px;
   }
 
   .event-meta {
     display: none;
   }
 
-  .event-meta div {
-    padding-block: 0;
-  }
-
-  .event-meta dd {
-    line-height: 1.5;
-  }
-
   .venue {
-    align-items: center;
-    gap: 0;
-    padding: 0 0 134px;
-  }
-
-  .venue__rule {
-    display: none;
+    padding: 150px 0 0;
   }
 
   .venue__map-title {
-    display: block;
-    order: 0;
-    margin: 0 0 55px;
+    font-size: 60px;
+  }
+
+  .venue__map {
+    width: 1004px;
+    max-width: calc(100% - 96px);
+    margin-top: 48px;
+    padding: 30px;
+  }
+
+  .venue__map-grid {
+    background-size: 33.333% 33.333%;
+  }
+
+  .venue__map-label {
+    font-size: 20px;
+  }
+
+  .venue__orientation {
+    font-size: 16px;
+  }
+
+  .venue__marker {
+    width: 420px;
+  }
+
+  .venue__marker img {
+    width: 36px;
+    height: 36px;
+  }
+
+  .venue__marker p {
+    font-size: 30px;
+  }
+
+  .venue__map-link {
+    bottom: 30px;
+    left: 30px;
+    font-size: 16px;
+  }
+
+  .venue__map-credit {
+    right: 30px;
+    bottom: 30px;
+    font-size: 12px;
   }
 
   .venue__address {
-    order: 1;
     width: min(900px, calc(100% - 96px));
-    padding-top: 0;
-    gap: 0;
-  }
-
-  .venue__address h2 {
-    display: none;
+    margin-top: 26px;
   }
 
   .venue__address > div {
+    display: grid;
     gap: 10px;
   }
 
@@ -1328,666 +1467,108 @@ button.social-item__link {
   }
 
   .venue__address-en {
-    display: block;
-  }
-
-  .venue__map {
-    order: 2;
-    width: 774px;
-    max-width: calc(100% - 96px);
-    height: 430px;
-    margin-top: 56px;
-    padding: 28px;
-  }
-
-  .venue__orientation {
-    display: block;
-  }
-
-  .venue__marker {
-    width: 300px;
-  }
-
-  .venue__marker p {
-    font-size: 22px;
+    margin-top: 0;
   }
 
   .venue__transport {
-    order: 3;
     width: min(900px, calc(100% - 96px));
-    margin-top: 86px;
+    margin-top: 124px;
   }
 
   .venue__transport > .venue__label {
     display: none;
   }
 
+  .venue__transport > p:last-child {
+    font-size: 20px;
+    line-height: 28px;
+  }
+
   .support {
-    gap: 48px;
-    min-height: 690px;
-    padding: 96px 0;
-  }
-
-  .support__intro {
-    gap: 0;
-  }
-
-  .support__intro p {
-    display: none;
+    padding: 152px 0 0;
   }
 
   .support h2 {
-    text-transform: none;
+    font-size: 60px;
   }
 
   .support__logos {
-    display: flex;
-    width: 719px;
-    height: 182px;
-    align-items: center;
+    width: 634px;
+    margin-top: 100px;
     justify-content: space-between;
-    margin: 0 auto;
-    transform: none;
   }
 
-  .support__logo {
-    position: static;
-    width: 129px;
-    height: 182px;
+  .support__logo--opening {
+    width: 116px;
   }
 
   .support__logo--partner {
-    position: static;
-    width: 228px;
-    height: 83px;
+    width: 129px;
   }
 
   .support__logo--closing {
-    display: block;
+    width: 48px;
   }
 
   .site-footer {
-    display: block;
-    width: 100%;
-    background: #040101;
-  }
-
-  .site-footer picture,
-  .site-footer img {
-    display: block;
-    width: 100%;
+    margin-top: 333px;
   }
 
   .site-footer img {
-    height: auto;
     aspect-ratio: 1440 / 111;
     object-fit: cover;
   }
 }
 
-/* Mobile layout aligned to the 390px Figma frame. */
 @media (max-width: 899px) {
-  .site {
-    font-family:
-      "Avenir Next", "PingFang SC", "Noto Sans SC", "Helvetica Neue", Arial,
-      sans-serif;
+  .venue .venue__transport {
+    margin-top: 19px;
   }
 
-  .site-header__bar {
-    height: 76px;
-    padding-inline: 20px;
+  .venue + .rule-divider {
+    margin-top: 71px;
   }
 
-  .campaign img {
-    aspect-ratio: 390 / 543;
-    object-fit: cover;
+  .site .support {
+    padding-top: 50px;
   }
 
-  .brand {
-    width: 68px;
-    height: 48px;
-  }
-
-  .mobile-ticket {
-    font-size: 12px;
-    font-weight: 600;
-  }
-
-  .mobile-nav {
-    justify-content: space-between;
-    gap: 0;
-    padding: 0 20px 12px;
-    font-size: 10px;
-    font-weight: 500;
-  }
-
-  .about {
-    display: grid;
-    gap: 0;
-    min-height: 0;
-    padding: 165px 20px 0;
-    background: var(--white);
-  }
-
-  .about h2,
-  .market h2,
-  .workshop h2,
-  .fashion h2,
-  .visit h2,
-  .venue__address h2,
-  .venue__map-title,
-  .support h2 {
-    font-family: "Avenir Next", "Helvetica Neue", Arial, sans-serif;
-    font-weight: 400;
-    letter-spacing: 0;
-    line-height: 1;
-    text-align: center;
-  }
-
-  .about h2 {
-    font-size: 40px;
-  }
-
-  .about__band {
-    display: block;
-    min-height: 0;
-    padding: 0;
-    background: none;
-  }
-
-  .about__content {
-    gap: 14px;
-    margin-top: 38px;
-    padding-top: 0;
-  }
-
-  .about__title {
-    display: none;
-  }
-
-  .about__copy {
-    font-size: 14.5px;
-    font-weight: 400;
-    line-height: 1.98;
-  }
-
-  .market {
-    gap: 0;
-    padding: 96px 20px 0;
-  }
-
-  .market__intro {
-    gap: 14px;
-  }
-
-  .market h2 {
-    font-size: 46px;
-    line-height: 1.15;
-    text-align: center;
-  }
-
-  .market__intro p {
-    font-size: 16px;
-    font-weight: 400;
-    line-height: 1.8;
-  }
-
-  .market__group {
-    gap: 0;
-    margin-top: 44px;
-    padding: 0;
-  }
-
-  .vendor-list {
-    display: grid;
-    width: 100%;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 56px;
-    row-gap: 44px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .vendor-list.vendor-list--desktop {
-    display: none;
-  }
-
-  .vendor-list.vendor-list--mobile {
-    display: grid;
-  }
-
-  .vendor-item {
-    display: grid;
-    justify-items: center;
-    gap: 9px;
-  }
-
-  .vendor-code {
-    display: inline-flex;
-    width: 82px;
-    height: 27px;
-    flex: none;
-    align-items: center;
-    justify-content: center;
-    background: #482418;
-    color: #ffffff;
-    font-size: 14px;
-    font-weight: 400;
-    line-height: 1;
-  }
-
-  .vendor-name {
-    font-size: 14px;
-    font-weight: 400;
-    line-height: 1.2;
-    white-space: nowrap;
-  }
-
-  .view-more {
-    margin-top: 120px;
-    font-size: 14px;
-    font-weight: 400;
-    line-height: 1;
-  }
-
-  .market-plan {
-    width: 100%;
-    margin-top: 76px;
-  }
-
-  .market-plan img {
-    width: 100%;
-    height: auto;
-  }
-
-  .food-area {
-    gap: 0;
-    min-height: 0;
-    margin-top: 85px;
-  }
-
-  .food-area h3 {
-    font-size: 16px;
-    font-weight: 600;
-    line-height: 1.2;
-  }
-
-  .food-area .vendor-list {
-    margin-top: 47px;
-    row-gap: 42px;
-  }
-
-  .workshop {
-    gap: 0;
-    min-height: 0;
-    padding: 126px 20px 100px;
-    background: var(--white);
-  }
-
-  .workshop__intro {
-    gap: 26px;
-  }
-
-  .workshop h2 {
-    font-size: 40px;
-  }
-
-  .workshop__summary {
-    min-height: 0;
-    font-size: 16px;
-    font-weight: 400;
-    line-height: 1.8;
-  }
-
-  .workshop-list {
-    width: 100%;
-    gap: 19px;
-    margin-top: 37px;
-  }
-
-  .workshop-item {
-    justify-items: center;
-    gap: 0;
-    padding: 0;
-    text-align: center;
-  }
-
-  .workshop-item h3 {
-    font-size: 30px;
-    font-weight: 500;
-    line-height: 44px;
-  }
-
-  .workshop-item p {
-    font-size: 16px;
-    line-height: 34px;
-  }
-
-  .workshop-item .workshop-item__meta {
-    margin-top: 4px;
-    font-size: 12px;
-    line-height: 16px;
-  }
-
-  .fashion {
-    gap: 0;
-    min-height: 0;
-    padding: 66px 20px 0;
-    background: var(--white);
-  }
-
-  .fashion__intro {
-    gap: 0;
-    min-height: 0;
-  }
-
-  .fashion h2 {
-    position: static;
-    font-size: 40px;
-    text-transform: none;
-  }
-
-  .fashion__intro p,
-  .fashion__schedule {
-    display: none;
-  }
-
-  .fashion__schedule-text {
-    display: grid;
-    gap: 30px;
-    margin-top: 39px;
-  }
-
-  .fashion-show {
-    display: grid;
-    grid-template-columns: auto auto;
-    justify-content: center;
-    column-gap: 5px;
-    font-family: "Avenir Next", "Helvetica Neue", Arial, sans-serif;
-    font-size: 16px;
-    line-height: 28px;
-    text-align: center;
-  }
-
-  .fashion-show__title {
-    grid-column: 1 / -1;
-  }
-
-  .fashion-show__prefix {
-    margin-right: 5px;
-  }
-
-  .fashion-show__date-desktop {
-    display: none;
-  }
-
-  .fashion-show__date-mobile {
-    display: inline;
-  }
-
-  .visit {
-    gap: 0;
-    padding: 144px 20px 0;
-    background: var(--white);
-  }
-
-  .visit__intro {
-    gap: 0;
-  }
-
-  .visit h2 {
-    font-size: 40px;
-  }
-
-  .visit__title-mobile,
-  .venue__title-mobile,
-  .venue__label-mobile {
-    display: inline;
-  }
-
-  .visit__title-desktop,
-  .venue__title-desktop,
-  .venue__label-desktop {
-    display: none;
-  }
-
-  .visit__intro > p {
-    margin-top: 30px;
-    font-size: 16px;
-    line-height: 1.6;
-  }
-
-  .visit__mobile-period {
-    display: inline;
-  }
-
-  .ticket-qr {
-    width: 182px;
-    height: 182px;
-    margin-top: 23px;
-  }
-
-  .ticket-card {
-    display: none;
-  }
-
-  .event-meta {
-    display: grid;
-    gap: 32px;
-    margin-top: 68px;
-  }
-
-  .event-meta div {
-    padding: 0;
-  }
-
-  .event-meta dt {
-    font-size: 24px;
-    font-weight: 400;
-    line-height: 1.2;
-  }
-
-  .event-meta dd {
-    margin-top: 16px;
-    font-size: 16px;
-    line-height: 1.3;
-  }
-
-  .venue {
-    gap: 0;
-    padding: 114px 20px 0;
-    background: var(--white);
-  }
-
-  .venue__rule {
-    display: none;
-  }
-
-  .venue__map-title {
-    order: 0;
-    margin: 0 0 37px;
-    font-size: 40px;
-  }
-
-  .venue__map {
-    order: 1;
-    width: 100%;
-    height: 309px;
-    padding: 20px;
-  }
-
-  .venue__address {
-    order: 2;
-    width: 100%;
-    margin-top: 18px;
-    gap: 8px;
-  }
-
-  .venue__address h2 {
-    font-size: 21px;
-    font-weight: 400;
-    line-height: 52px;
-  }
-
-  .venue__address > div {
-    gap: 0;
-  }
-
-  .venue__label {
-    font-size: 21px;
-    font-weight: 400;
-    line-height: 52px;
-  }
-
-  .venue__label--address {
-    display: none;
-  }
-
-  .venue__address > div > p:first-child {
-    font-size: 16px;
-    line-height: 1.4;
-  }
-
-  .venue__address-en {
-    display: none;
-  }
-
-  .venue__transport {
-    order: 3;
-    margin-top: 7px;
-    gap: 0;
-  }
-
-  .venue__transport > p:last-child {
-    font-size: 16px;
-    line-height: 22px;
-  }
-
-  .support {
-    gap: 0;
-    min-height: 0;
-    padding: 120px 20px 129px;
-    background: var(--white);
-  }
-
-  .support__intro {
-    gap: 0;
-  }
-
-  .support h2 {
-    font-size: 40px;
-    text-transform: none;
-  }
-
-  .support__intro p {
-    display: block;
-    margin-top: 36px;
-    font-size: 16px;
-    line-height: 1.4;
-    text-align: center;
-  }
-
-  .support__logos {
-    display: flex;
-    width: 305px;
-    height: 58px;
-    align-items: center;
-    justify-content: space-between;
-    margin: 48px auto 0;
-    transform: none;
-  }
-
-  .support__logo {
-    width: 41px;
-    height: 58px;
-    flex: none;
-  }
-
-  .support__logo--partner {
-    position: static;
-    width: 93px;
-    height: 34px;
-  }
-
-  .support__logo--closing {
-    display: block;
-  }
-
-  .site-footer {
-    display: block;
-    width: 100%;
-    background: #040101;
-  }
-
-  .site-footer picture,
-  .site-footer img {
-    display: block;
-    width: 100%;
-  }
-
-  .site-footer img {
-    height: auto;
-  }
-}
-
-@media (min-width: 600px) and (max-width: 899px) {
-  .site-header__bar,
-  .mobile-nav,
-  .about,
-  .market,
-  .workshop,
-  .fashion,
-  .visit,
-  .venue,
-  .support {
-    padding-inline: 32px;
-  }
-
-  .about__content,
-  .market__intro,
-  .market__group,
-  .food-area,
-  .workshop-list,
-  .fashion__schedule-text,
-  .event-meta,
-  .venue__map-title,
-  .venue__map,
-  .venue__address,
-  .venue__transport {
-    width: min(560px, 100%);
-    margin-inline: auto;
-  }
-
-  .venue__map {
-    width: min(560px, 100%);
-  }
-
-  .support__logos {
-    margin-inline: auto;
+  .site .support__logos {
+    margin-top: 34px;
   }
 }
 
 @media (max-width: 359px) {
-  .vendor-list {
-    column-gap: 20px;
+  .mobile-nav {
+    gap: 12px;
+    padding-inline: 12px;
   }
 
-  .vendor-item {
-    gap: 8px;
+  .market h2 {
+    font-size: 30px;
   }
 
-  .vendor-code {
-    width: 68px;
+  .vendor-list--mobile,
+  .food-list {
+    column-gap: 8px;
   }
 
-  .support h2 {
-    font-size: 36px;
+  .social-item__link {
+    width: 240px;
+  }
+}
+
+@media (max-width: 380px) {
+  .fashion-show {
+    grid-template-columns: auto auto;
+    justify-content: space-between;
+    column-gap: 8px;
+    row-gap: 3px;
+    white-space: normal;
   }
 
-  .support__logos {
-    width: 100%;
-    max-width: 305px;
+  .fashion-show__title {
+    grid-column: 1 / -1;
   }
 }
 
