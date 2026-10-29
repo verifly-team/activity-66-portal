@@ -18,6 +18,13 @@ import brandWebp from "./assets/optimized/brand.webp";
 import { VenueMap } from "./VenueMap";
 import { VENUE } from "./venue";
 
+const IS_STANDALONE_BUILD =
+  typeof document !== "undefined" &&
+  document.documentElement.dataset.standalone === "true";
+const APPLY_HREF = IS_STANDALONE_BUILD
+  ? "./apply-standalone.html"
+  : "./apply.html";
+
 const workshopItems = [
   {
     title: "工作坊壹",
@@ -199,7 +206,7 @@ function App() {
             <a href="#market">Vintage Market</a>
             <a href="#workshop">Workshop</a>
             <a href="#fashion">Fashion Show</a>
-            <a href="./apply.html">Vendors</a>
+            <a href={APPLY_HREF}>Vendors</a>
             <a href="#visit">TICKETS</a>
           </nav>
 
@@ -213,7 +220,7 @@ function App() {
           <a href="#market">Vintage Market</a>
           <a href="#workshop">Workshop</a>
           <a href="#fashion">Fashion Show</a>
-          <a href="./apply.html">Vendors</a>
+          <a href={APPLY_HREF}>Vendors</a>
         </nav>
         </header>
 

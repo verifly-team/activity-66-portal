@@ -1,6 +1,7 @@
 node_modules/
 dist/
 index.html
+apply-standalone.html
 output/
 .playwright-cli/
 .omx/

@@ -3,6 +3,11 @@ import brandFallback from "./assets/optimized/brand.png";
 import brandWebp from "./assets/optimized/brand.webp";
 import "./apply.css";
 
+const IS_STANDALONE_BUILD =
+  typeof document !== "undefined" &&
+  document.documentElement.dataset.standalone === "true";
+const HOME_HREF = IS_STANDALONE_BUILD ? "./index.html" : "./app.html";
+
 const DEFAULT_API_BASE = "https://api.66thandsecondlovehealgiveus.com";
 const API_BASE = (import.meta.env.VITE_API_BASE ?? DEFAULT_API_BASE).replace(
   /\/$/,
@@ -356,14 +361,14 @@ function scrollUnderHeader(element: HTMLElement | null, behavior: ScrollBehavior
 function AppHeader() {
   return (
     <header className="apply-header">
-      <a className="apply-header__brand" href="./app.html" aria-label="66th & 2nd Ave. 活动首页">
+      <a className="apply-header__brand" href={HOME_HREF} aria-label="66th & 2nd Ave. 活动首页">
         <picture>
           <source type="image/webp" srcSet={brandWebp} />
           <img src={brandFallback} alt="66th & 2nd Ave." />
         </picture>
       </a>
       <p className="apply-header__title">商家参展申请及意向登记表</p>
-      <a className="apply-header__back" href="./app.html">
+      <a className="apply-header__back" href={HOME_HREF}>
         返回活动首页 <span className="arrow" aria-hidden="true">↗</span>
       </a>
     </header>
@@ -1099,7 +1104,7 @@ export default function ApplyPage() {
               </p>
             </div>
             <div className="apply-success__actions">
-              <a href="./app.html">返回活动首页 <span className="arrow" aria-hidden="true">↗</span></a>
+              <a href={HOME_HREF}>返回活动首页 <span className="arrow" aria-hidden="true">↗</span></a>
               <button type="button" onClick={startAnother}>
                 {result.preview ? "重新预览" : "再提交一份"}
               </button>
