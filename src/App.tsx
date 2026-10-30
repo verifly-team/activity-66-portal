@@ -18,6 +18,7 @@ import tabSpecialContents from "./assets/figma-2026-10/tab-special-contents.png"
 import ticketsCtaDesktop from "./assets/figma-2026-10/tickets-cta-desktop.png";
 import ticketsCtaMobile from "./assets/figma-2026-10/tickets-cta-mobile.png";
 import ticketQr from "./assets/figma-2026-10/ticket-qr.webp";
+import { ArrowIcon } from "./ArrowIcon";
 import { VenueMap } from "./VenueMap";
 import { VENUE } from "./venue";
 
@@ -227,7 +228,7 @@ function App() {
               <a href="#workshop">Workshop</a>
               <a href={APPLY_HREF}>Vendors</a>
               <a className="nav-tickets" href="#visit">
-                Tickets<span className="arrow" aria-hidden="true">↗</span>
+                Tickets<ArrowIcon className="arrow" />
               </a>
             </nav>
           </div>
@@ -238,7 +239,7 @@ function App() {
             <a href="#workshop">Workshop</a>
             <a href={APPLY_HREF}>Vendors</a>
             <a className="nav-tickets" href="#visit">
-              Tickets<span className="arrow" aria-hidden="true">↗</span>
+              Tickets<ArrowIcon className="arrow" />
             </a>
           </nav>
         </header>
@@ -472,7 +473,9 @@ function App() {
               <VenueMap lat={VENUE.gcj02.lat} lng={VENUE.gcj02.lng} />
               <div className="venue__map-heading">
                 <p className="venue__map-label">SHENZHEN / 深圳</p>
-                <p className="venue__orientation">N ↑</p>
+                <p className="venue__orientation">
+                  N <ArrowIcon direction="up" />
+                </p>
               </div>
               <div className="venue__marker">
                 <img src={locationTarget} alt="" aria-hidden="true" />
@@ -484,7 +487,7 @@ function App() {
                 target="_blank"
                 rel="noreferrer"
               >
-                在高德地图中查看 <span aria-hidden="true">↗</span>
+                在高德地图中查看 <ArrowIcon />
               </a>
               <p className="venue__map-credit">© 高德地图</p>
             </div>

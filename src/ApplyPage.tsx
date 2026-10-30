@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import brandFallback from "./assets/optimized/brand.png";
 import brandWebp from "./assets/optimized/brand.webp";
 import "./apply.css";
+import { ArrowIcon } from "./ArrowIcon";
 
 const IS_STANDALONE_BUILD =
   typeof document !== "undefined" &&
@@ -369,7 +370,7 @@ function AppHeader() {
       </a>
       <p className="apply-header__title">商家参展申请及意向登记表</p>
       <a className="apply-header__back" href={HOME_HREF}>
-        返回活动首页 <span className="arrow" aria-hidden="true">↗</span>
+        返回活动首页 <ArrowIcon className="arrow" />
       </a>
     </header>
   );
@@ -1104,7 +1105,7 @@ export default function ApplyPage() {
               </p>
             </div>
             <div className="apply-success__actions">
-              <a href={HOME_HREF}>返回活动首页 <span className="arrow" aria-hidden="true">↗</span></a>
+              <a href={HOME_HREF}>返回活动首页 <ArrowIcon className="arrow" /></a>
               <button type="button" onClick={startAnother}>
                 {result.preview ? "重新预览" : "再提交一份"}
               </button>
@@ -1419,7 +1420,7 @@ export default function ApplyPage() {
                             className="zone-option__off"
                             href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("66th D 区合作咨询")}`}
                           >
-                            邮件咨询 D 区 ↗
+                            邮件咨询 D 区 <ArrowIcon />
                           </a>
                         </span>
                       </div>
@@ -1952,7 +1953,7 @@ export default function ApplyPage() {
                             : "预览提交"}
                       </span>
                       <span className="arrow" aria-hidden="true">
-                        {submitting || uploadingCount > 0 ? "…" : "↗"}
+                        {submitting || uploadingCount > 0 ? "…" : <ArrowIcon />}
                       </span>
                     </button>
                     <button
@@ -2038,10 +2039,10 @@ export default function ApplyPage() {
                   或下载 Word 完整表填写。
                 </p>
                 <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("66th 商家参展申请补充资料")}`}>
-                  发送补充资料 ↗
+                  发送补充资料 <ArrowIcon />
                 </a>
                 <a href={DOCX_URL} download>
-                  下载 Word 完整表 ↓
+                  下载 Word 完整表 <ArrowIcon direction="down" />
                 </a>
               </div>
 

@@ -89,6 +89,15 @@ dd {
   line-height: 1;
 }
 
+.arrow-icon {
+  display: inline-block;
+  flex: none;
+  width: 1em;
+  height: 1em;
+  overflow: visible;
+  vertical-align: -0.11em;
+}
+
 /* Header */
 
 .site-header {

@@ -21,6 +21,15 @@
   padding-bottom: 120px;
 }
 
+.arrow-icon {
+  display: inline-block;
+  flex: none;
+  width: 1em;
+  height: 1em;
+  overflow: visible;
+  vertical-align: -0.11em;
+}
+
 .apply-header {
   position: sticky;
   top: 0;
