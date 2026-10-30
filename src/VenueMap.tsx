@@ -59,7 +59,8 @@ export function VenueMap({ lat, lng }: VenueMapProps) {
     const tiles = L.tileLayer(
       "https://webst0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}",
       {
-        subdomains: ["1", "3"],
+        // webst01 rejects TLS handshakes, which left every other tile blank.
+        subdomains: ["2", "3", "4"],
         minZoom: 1,
         maxZoom: 18,
       },
