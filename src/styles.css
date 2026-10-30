@@ -516,6 +516,7 @@ button.social-item__link {
   min-width: 0;
   grid-template-columns: repeat(3, 37px);
   justify-content: space-between;
+  justify-items: center;
   column-gap: 0;
   row-gap: 31px;
 }
@@ -1279,6 +1280,7 @@ button.social-item__link {
     max-width: calc(100% - 96px);
     grid-template-columns: repeat(5, 59px);
     justify-content: space-between;
+    justify-items: center;
     column-gap: 0;
     grid-auto-rows: 46px;
     row-gap: 62px;
@@ -1321,6 +1323,7 @@ button.social-item__link {
     max-width: calc(100% - 96px);
     grid-template-columns: repeat(5, 59px);
     justify-content: space-between;
+    justify-items: center;
     column-gap: 0;
     row-gap: 0;
     margin-top: 32px;
