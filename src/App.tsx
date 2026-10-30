@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import coomenLogo from "./assets/figma-2026-10/coomen-logo.webp";
 import footerDesktop from "./assets/figma-2026-10/footer-desktop.webp";
 import heroDesktop from "./assets/figma-2026-10/hero-desktop.webp";
@@ -181,11 +181,166 @@ function RuleDivider() {
   return <div className="rule-divider" aria-hidden="true" />;
 }
 
+const introBurstPieces = [
+  { x: "-13vmin", y: "-18vmin", rotation: "-42deg", scale: 0.95 },
+  { x: "4vmin", y: "-23vmin", rotation: "24deg", scale: 0.7 },
+  { x: "17vmin", y: "-15vmin", rotation: "62deg", scale: 1.05 },
+  { x: "25vmin", y: "-4vmin", rotation: "-18deg", scale: 0.8 },
+  { x: "22vmin", y: "11vmin", rotation: "43deg", scale: 0.65 },
+  { x: "13vmin", y: "21vmin", rotation: "-66deg", scale: 1.1 },
+  { x: "-1vmin", y: "25vmin", rotation: "18deg", scale: 0.75 },
+  { x: "-15vmin", y: "19vmin", rotation: "82deg", scale: 1.15 },
+  { x: "-24vmin", y: "7vmin", rotation: "-34deg", scale: 0.7 },
+  { x: "-26vmin", y: "-6vmin", rotation: "52deg", scale: 0.85 },
+  { x: "-8vmin", y: "-11vmin", rotation: "112deg", scale: 0.5 },
+  { x: "9vmin", y: "-9vmin", rotation: "-71deg", scale: 0.55 },
+  { x: "11vmin", y: "7vmin", rotation: "31deg", scale: 0.48 },
+  { x: "-7vmin", y: "9vmin", rotation: "-101deg", scale: 0.62 },
+] as const;
+
+type IntroPhase = "ready" | "popping" | "complete";
+
+const introSeenKey = "activity-66:intro-seen";
+
+function shouldPlayIntro() {
+  if (new URLSearchParams(window.location.search).has("balloon")) return true;
+  // 站内锚点链接直接进到某个板块时，没必要先炸一遍气球。
+  if (window.location.hash.length > 1) return false;
+
+  try {
+    return window.sessionStorage.getItem(introSeenKey) !== "1";
+  } catch {
+    return true;
+  }
+}
+
+function BalloonIntro({
+  phase,
+  onPop,
+}: {
+  phase: Exclude<IntroPhase, "complete">;
+  onPop: () => void;
+}) {
+  return (
+    <div
+      className={`balloon-intro balloon-intro--${phase}`}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="balloon-intro-title"
+      aria-describedby="balloon-intro-description"
+    >
+      <div className="balloon-intro__grid" aria-hidden="true" />
+      <p className="visually-hidden" id="balloon-intro-title">
+        66th &amp; 2nd Ave.
+      </p>
+      <p className="visually-hidden" id="balloon-intro-description">
+        点击银色 66 气球，打开活动网站。
+      </p>
+
+      <div className="balloon-intro__stage">
+        <button
+          className="intro-balloon"
+          type="button"
+          aria-label="点击气球，打开 66th & 2nd Ave. 网站"
+          onClick={onPop}
+        >
+          <span className="intro-balloon__body" aria-hidden="true">
+            <span className="intro-balloon__crease intro-balloon__crease--one" />
+            <span className="intro-balloon__crease intro-balloon__crease--two" />
+            <span className="intro-balloon__number">66</span>
+            <span className="intro-balloon__knot" />
+          </span>
+          <svg
+            className="intro-balloon__string"
+            viewBox="0 0 80 210"
+            aria-hidden="true"
+          >
+            <path d="M41 2C35 48 48 74 39 113c-8 37 4 56 1 95" />
+          </svg>
+        </button>
+
+        <div className="intro-balloon__burst" aria-hidden="true">
+          {introBurstPieces.map((piece, index) => (
+            <span
+              className="intro-balloon__shard"
+              key={index}
+              style={
+                {
+                  "--piece-x": piece.x,
+                  "--piece-y": piece.y,
+                  "--piece-rotation": piece.rotation,
+                  "--piece-scale": piece.scale,
+                  "--piece-delay": `${index * 7}ms`,
+                } as CSSProperties
+              }
+            />
+          ))}
+        </div>
+      </div>
+      <div className="balloon-intro__flash" aria-hidden="true" />
+    </div>
+  );
+}
+
 function App() {
+  const [playIntro] = useState(shouldPlayIntro);
+  const [introPhase, setIntroPhase] = useState<IntroPhase>(
+    playIntro ? "ready" : "complete",
+  );
   const [wechatOpen, setWechatOpen] = useState(false);
   const [vendorsExpanded, setVendorsExpanded] = useState(false);
   const wechatTriggerRef = useRef<HTMLButtonElement>(null);
   const wechatDialogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!playIntro || introPhase !== "complete") return;
+
+    try {
+      window.sessionStorage.setItem(introSeenKey, "1");
+    } catch {
+      // 隐私模式下写入失败时，下次照常播放即可。
+    }
+  }, [introPhase, playIntro]);
+
+  // 页面内容要等 React 挂载后才存在，原生锚点这时已经错过了滚动时机。
+  useEffect(() => {
+    const { hash } = window.location;
+    if (hash.length < 2) return;
+
+    const scrollToHash = () => {
+      const target = document.getElementById(
+        decodeURIComponent(hash.slice(1)),
+      );
+      target?.scrollIntoView({ block: "start", behavior: "instant" });
+    };
+
+    scrollToHash();
+    window.addEventListener("load", scrollToHash);
+    return () => window.removeEventListener("load", scrollToHash);
+  }, []);
+
+  useEffect(() => {
+    if (introPhase !== "complete") {
+      const previousOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = previousOverflow;
+      };
+    }
+  }, [introPhase]);
+
+  useEffect(() => {
+    if (introPhase !== "popping") return;
+
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const revealTimer = window.setTimeout(() => {
+      setIntroPhase("complete");
+    }, prefersReducedMotion ? 460 : 1120);
+
+    return () => window.clearTimeout(revealTimer);
+  }, [introPhase]);
 
   useEffect(() => {
     if (!wechatOpen) return;
@@ -211,9 +366,25 @@ function App() {
     ? mobileVendors
     : mobileVendors.slice(0, mobileVendorPreviewCount);
 
+  const siteClassName = [
+    "site",
+    playIntro
+      ? introPhase === "ready"
+        ? "site--intro-waiting"
+        : "site--intro-revealed"
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <>
-      <div className="site" id="top">
+      <div
+        className={siteClassName}
+        id="top"
+        inert={introPhase !== "complete"}
+        aria-hidden={introPhase !== "complete"}
+      >
         <header className="site-header">
           <div className="site-header__stripe" aria-hidden="true" />
           <div className="site-header__bar">
@@ -576,6 +747,15 @@ function App() {
           </picture>
         </footer>
       </div>
+
+      {introPhase !== "complete" && (
+        <BalloonIntro
+          phase={introPhase}
+          onPop={() => {
+            if (introPhase === "ready") setIntroPhase("popping");
+          }}
+        />
+      )}
 
       {wechatOpen && (
         <div
