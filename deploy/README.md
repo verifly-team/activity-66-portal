@@ -51,28 +51,26 @@ ssh-copy-id -i ~/.ssh/activity-66_deploy.pub deploy@ECS_IP
 
 ## 四、GitHub 配置
 
-Settings → Secrets and variables → Actions。
-
-Secrets：
+Settings → Secrets and variables → Actions，只加两个 secret：
 
 | 名称 | 值 |
 | --- | --- |
 | `ALIYUN_HOST` | ECS 公网 IP |
-| `ALIYUN_USER` | `deploy` |
 | `ALIYUN_SSH_KEY` | 部署私钥全文（`~/.ssh/activity-66_deploy`） |
-| `ALIYUN_KNOWN_HOSTS` | `ssh-keyscan -p 22 -H ECS_IP` 的输出 |
 
-Variables：
+用户名固定 `deploy`、端口固定 `22`、站点目录固定 `/verifly/activity-66-portal`，
+都写在 workflow 里，不用再配。命中过的 host key 会被接受，所以也不需要
+`known_hosts`。
 
-| 名称 | 值 |
-| --- | --- |
-| `ALIYUN_PUBLIC_URL` | `https://66thandsecondlovehealgiveus.com` |
-
-没配 `ALIYUN_HOST` 时 workflow 只构建不上传，可以放心先合并。
+可选：想让 workflow 发布完顺便检查线上，就加一个 variable
+`ALIYUN_PUBLIC_URL` = `https://66thandsecondlovehealgiveus.com`。不加就跳过这步，
+不影响发布。
 
 ## 五、跑第一次发布
 
-push `main`，或者手动运行 `Deploy portal to Aliyun ECS`。
+手动运行 `Deploy portal to Aliyun ECS`。它只做两件事：构建，然后把 `dist/`
+覆盖到 `/verifly/activity-66-portal`。静态文件不需要 reload nginx，nginx 每次
+请求都直接读磁盘。
 
 跑完目录里就是构建好的 `index.html`、`app.html`、`apply.html`、`assets/` 和
 `REVISION`。此时访问 `http://ECS_IP/` 就能看到完整页面，表单和上传都能在

@@ -1,8 +1,6 @@
 name: Deploy portal to Aliyun ECS
 
-# Build the static site and rsync dist/ straight into the BaoTa site root.
-# No container, no registry, no server-side nginx changes.
-
+# 构建静态站，然后把 dist/ 覆盖到服务器站点目录。就两步，没有别的。
 # 手动触发：Actions → Deploy portal to Aliyun ECS → Run workflow。
 # 全部验证完、准备上线后，再把 push main 加回来改成自动。
 on:
@@ -16,7 +14,9 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  APP_DIR: ${{ vars.ALIYUN_APP_DIR || '/verifly/activity-66-portal' }}
+  APP_DIR: /verifly/activity-66-portal
+  SSH_USER: deploy
+  SSH_PORT: "22"
 
 jobs:
   deploy:
@@ -24,18 +24,6 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - name: Check deployment configuration
-        id: cfg
-        env:
-          HOST: ${{ secrets.ALIYUN_HOST }}
-        run: |
-          if [ -n "${HOST:-}" ]; then
-            echo "configured=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::notice title=Deployment skipped::ALIYUN_HOST is not set, so the site is built but not uploaded."
-          fi
-
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
@@ -54,48 +42,35 @@ jobs:
           cp dist/app.html dist/index.html
           printf '%s\n' "$GITHUB_SHA" > dist/REVISION
 
-      - name: Configure SSH
-        if: steps.cfg.outputs.configured == 'true'
+      - name: Replace files on the server
         env:
+          HOST: ${{ secrets.ALIYUN_HOST }}
           SSH_KEY: ${{ secrets.ALIYUN_SSH_KEY }}
-          KNOWN_HOSTS: ${{ secrets.ALIYUN_KNOWN_HOSTS }}
-          HOST: ${{ secrets.ALIYUN_HOST }}
-          PORT: ${{ secrets.ALIYUN_PORT || '22' }}
         run: |
           set -euo pipefail
-          install -m 700 -d "$HOME/.ssh"
-          printf '%s\n' "$SSH_KEY" > "$HOME/.ssh/activity_66_deploy"
-          chmod 600 "$HOME/.ssh/activity_66_deploy"
-          if [ -n "${KNOWN_HOSTS:-}" ]; then
-            printf '%s\n' "$KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
-          else
-            ssh-keyscan -T 10 -p "$PORT" -H "$HOST" > "$HOME/.ssh/known_hosts"
+          if [ -z "${HOST:-}" ] || [ -z "${SSH_KEY:-}" ]; then
+            echo "ALIYUN_HOST / ALIYUN_SSH_KEY 还没配，只完成构建。"
+            exit 1
           fi
-          chmod 600 "$HOME/.ssh/known_hosts"
-          test -s "$HOME/.ssh/known_hosts"
 
-      - name: Upload site files
-        if: steps.cfg.outputs.configured == 'true'
-        env:
-          HOST: ${{ secrets.ALIYUN_HOST }}
-          USER: ${{ secrets.ALIYUN_USER || 'deploy' }}
-          PORT: ${{ secrets.ALIYUN_PORT || '22' }}
-        run: |
-          set -euo pipefail
-          SSH_OPTS="-p $PORT -i $HOME/.ssh/activity_66_deploy -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes"
-          REMOTE="$USER@$HOST"
+          install -m 700 -d "$HOME/.ssh"
+          printf '%s\n' "$SSH_KEY" > "$HOME/.ssh/deploy_key"
+          chmod 600 "$HOME/.ssh/deploy_key"
+
+          SSH_OPTS="-p $SSH_PORT -i $HOME/.ssh/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=accept-new"
+          REMOTE="$SSH_USER@$HOST"
 
           ssh $SSH_OPTS "$REMOTE" "mkdir -p '$APP_DIR'"
-          # --delay-updates stages every file and renames at the end, so the live
-          # directory is never a half-written mix of two builds.
+          # --delay-updates 先把文件传成临时名，最后一起改名，
+          # 访问过程中不会看到两个版本混在一起的目录。
           rsync -az --delete --delay-updates --chmod=D755,F644 \
             -e "ssh $SSH_OPTS" \
             dist/ "$REMOTE:$APP_DIR/"
 
           echo "Released ${GITHUB_SHA:0:12}"
 
-      - name: Verify public site
-        if: steps.cfg.outputs.configured == 'true' && vars.ALIYUN_PUBLIC_URL != ''
+      - name: Check the public site
+        if: vars.ALIYUN_PUBLIC_URL != ''
         env:
           PUBLIC_URL: ${{ vars.ALIYUN_PUBLIC_URL }}
         run: |
@@ -107,17 +82,5 @@ jobs:
             echo "ok   $path"
           done
           live="$(curl -sS --max-time 20 "$base/REVISION" | tr -d '[:space:]' || true)"
-          if [ "$live" != "$GITHUB_SHA" ]; then
-            echo "FAIL revision: live='$live' expected='$GITHUB_SHA'"
-            exit 1
-          fi
+          [ "$live" = "$GITHUB_SHA" ] || { echo "FAIL revision: live='$live'"; exit 1; }
           echo "ok   revision ${live:0:12}"
-
-      - name: Summary
-        if: always()
-        run: |
-          echo "### activity-66 portal" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Commit: \`${GITHUB_SHA:0:12}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Target: \`${{ secrets.ALIYUN_HOST || 'not configured' }}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Public URL: \`${{ vars.ALIYUN_PUBLIC_URL || 'not configured' }}\`" >> "$GITHUB_STEP_SUMMARY"
