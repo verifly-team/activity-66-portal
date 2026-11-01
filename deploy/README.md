@@ -51,15 +51,16 @@ ssh-copy-id -i ~/.ssh/activity-66_deploy.pub deploy@ECS_IP
 
 ## 四、GitHub 配置
 
-Settings → Secrets and variables → Actions，只加两个 secret：
+Settings → Secrets and variables → Actions，三个 secret：
 
 | 名称 | 值 |
 | --- | --- |
 | `ALIYUN_HOST` | ECS 公网 IP |
+| `ALIYUN_USER` | SSH 用户，一般是 `deploy` |
 | `ALIYUN_SSH_KEY` | 部署私钥全文（`~/.ssh/activity-66_deploy`） |
 
-用户名固定 `deploy`、端口固定 `22`、站点目录固定 `/verifly/activity-66-portal`，
-都写在 workflow 里，不用再配。命中过的 host key 会被接受，所以也不需要
+端口默认 22，SSH 端口不是 22 的话再加一个 `ALIYUN_PORT`。站点目录固定
+`/verifly/activity-66-portal`；第一次连上时接受的 host key 会被记住，所以不需要
 `known_hosts`。
 
 可选：想让 workflow 发布完顺便检查线上，就加一个 variable

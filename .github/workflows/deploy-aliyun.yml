@@ -15,8 +15,8 @@ concurrency:
 
 env:
   APP_DIR: /verifly/activity-66-portal
-  SSH_USER: deploy
-  SSH_PORT: "22"
+  SSH_USER: ${{ secrets.ALIYUN_USER || 'deploy' }}
+  SSH_PORT: ${{ secrets.ALIYUN_PORT || '22' }}
 
 jobs:
   deploy:
@@ -49,7 +49,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${HOST:-}" ] || [ -z "${SSH_KEY:-}" ]; then
-            echo "ALIYUN_HOST / ALIYUN_SSH_KEY 还没配，只完成构建。"
+            echo "ALIYUN_HOST 或 ALIYUN_SSH_KEY 还没配，只完成构建。"
             exit 1
           fi
 
