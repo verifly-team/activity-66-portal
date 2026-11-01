@@ -1,9 +1,10 @@
 name: Deploy portal to Aliyun ECS
 
 # 构建静态站，然后把 dist/ 覆盖到服务器站点目录。就两步，没有别的。
-# 手动触发：Actions → Deploy portal to Aliyun ECS → Run workflow。
-# 全部验证完、准备上线后，再把 push main 加回来改成自动。
+# push main 自动发布；也可以在 Actions 里手动 Run workflow。
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:

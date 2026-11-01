@@ -69,8 +69,9 @@ Settings → Secrets and variables → Actions，三个 secret：
 
 ## 五、跑第一次发布
 
-手动运行 `Deploy portal to Aliyun ECS`。它只做两件事：构建，然后把 `dist/`
-覆盖到 `/verifly/activity-66-portal`。静态文件不需要 reload nginx，nginx 每次
+push `main` 就会自动跑 `Deploy portal to Aliyun ECS`，也可以在 Actions 里手动
+Run workflow。它只做两件事：构建，然后把 `dist/` 覆盖到
+`/verifly/activity-66-portal`。静态文件不需要 reload nginx，nginx 每次
 请求都直接读磁盘。
 
 跑完目录里就是构建好的 `index.html`、`app.html`、`apply.html`、`assets/` 和
@@ -107,5 +108,5 @@ curl -s  https://66thandsecondlovehealgiveus.com/REVISION
 
 - 服务器需要有 `rsync`，宝塔机器一般自带；没有的话 `apt install rsync`。
 - 根目录填 `/verifly/activity-66-portal`，别填成 `/verifly`，那样会读到上层目录，首页 404。
-- 切换完成后把域名从 GitHub Pages 解绑，并删掉 `.github/workflows/pages.yml`，
-  免得同一个域名有两份在线内容。
+- 切换完成后去仓库 Settings → Pages 把这个自定义域名解绑，不然 GitHub 那边
+  还会一直尝试给这个域名发证书。
