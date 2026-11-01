@@ -1,8 +1,11 @@
-name: Deploy activity-66 portal image to Aliyun
+name: Deploy portal to Aliyun ECS
 
+# Build the static site and rsync dist/ straight into the BaoTa site root.
+# No container, no registry, no server-side nginx changes.
+
+# 手动触发：Actions → Deploy portal to Aliyun ECS → Run workflow。
+# 全部验证完、准备上线后，再把 push main 加回来改成自动。
 on:
-  push:
-    branches: [main, master]
   workflow_dispatch:
 
 permissions:
@@ -12,229 +15,109 @@ concurrency:
   group: activity-66-production
   cancel-in-progress: false
 
+env:
+  APP_DIR: ${{ vars.ALIYUN_APP_DIR || '/verifly/activity-66-portal' }}
+
 jobs:
-  preflight:
-    runs-on: ubuntu-latest
-    outputs:
-      configured: ${{ steps.check.outputs.configured }}
-
-    steps:
-      - name: Check Aliyun deployment configuration
-        id: check
-        env:
-          ALIYUN_HOST: ${{ secrets.ALIYUN_HOST }}
-          ALIYUN_USER: ${{ secrets.ALIYUN_USER }}
-          ALIYUN_SSH_KEY: ${{ secrets.ALIYUN_SSH_KEY }}
-        run: |
-          set -euo pipefail
-          if [[ -n "${ALIYUN_HOST:-}" && -n "${ALIYUN_USER:-}" && -n "${ALIYUN_SSH_KEY:-}" ]]; then
-            echo "configured=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::notice title=Aliyun deployment skipped::Configure the Aliyun Actions secrets and variables to enable deployment."
-          fi
-
-  build:
+  deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Check deployment configuration
+        id: cfg
+        env:
+          HOST: ${{ secrets.ALIYUN_HOST }}
+        run: |
+          if [ -n "${HOST:-}" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Deployment skipped::ALIYUN_HOST is not set, so the site is built but not uploaded."
+          fi
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
 
-      - name: Install dependencies
-        run: npm ci --no-audit --no-fund
-
-      - name: Build static site
-        run: npm run build
-
-      - name: Verify build output
+      - name: Build
         run: |
           set -euo pipefail
+          npm ci --no-audit --no-fund
+          npm run build
           test -f dist/app.html
+          test -f dist/apply.html
           test -n "$(find dist/assets -maxdepth 1 -name '*.js' -print -quit)"
+          cp dist/app.html dist/index.html
           printf '%s\n' "$GITHUB_SHA" > dist/REVISION
 
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: activity-66-dist-${{ github.sha }}
-          path: dist/
-          retention-days: 7
-
-  validate-image:
-    needs: build
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: activity-66-dist-${{ github.sha }}
-          path: dist
-
-      - name: Build Docker image
-        run: |
-          docker build \
-            --platform linux/amd64 \
-            --build-arg "REVISION=$GITHUB_SHA" \
-            --file deploy/docker/Dockerfile \
-            --tag activity-66-portal:ci \
-            .
-
-      - name: Smoke test Docker image
-        run: |
-          set -euo pipefail
-          docker run --detach --name activity-66-ci \
-            --publish 127.0.0.1:18080:80 \
-            activity-66-portal:ci
-          for attempt in {1..30}; do
-            if curl -fsS --max-time 5 http://127.0.0.1:18080/app.html >/dev/null; then
-              break
-            fi
-            sleep 2
-          done
-          asset="$(
-            curl -fsS http://127.0.0.1:18080/app.html \
-              | grep -oE '\./assets/[^"]+' \
-              | head -n 1 \
-              | sed 's#^\./##'
-          )"
-          test -n "$asset"
-          curl -fsS "http://127.0.0.1:18080/$asset" >/dev/null
-          for attempt in {1..30}; do
-            health="$(docker inspect --format '{{.State.Health.Status}}' activity-66-ci)"
-            if [[ "$health" == "healthy" ]]; then
-              break
-            fi
-            if [[ "$health" == "unhealthy" ]]; then
-              docker logs activity-66-ci
-              exit 1
-            fi
-            sleep 2
-          done
-          test "$(docker inspect --format '{{.State.Health.Status}}' activity-66-ci)" = "healthy"
-
-      - name: Remove smoke-test container
-        if: always()
-        run: docker rm --force activity-66-ci || true
-
-  validate-flow-image:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Build Flow image from source
-        run: |
-          docker build \
-            --platform linux/amd64 \
-            --build-arg "REVISION=$GITHUB_SHA" \
-            --file deploy/flow/Dockerfile \
-            --tag activity-66-portal:flow-ci \
-            .
-
-      - name: Smoke test Flow image
-        run: |
-          set -euo pipefail
-          docker run --detach --name activity-66-flow-ci \
-            --publish 127.0.0.1:18081:80 \
-            activity-66-portal:flow-ci
-          for attempt in {1..60}; do
-            if curl -fsS --max-time 5 http://127.0.0.1:18081/app.html >/dev/null; then
-              break
-            fi
-            sleep 2
-          done
-          asset="$(
-            curl -fsS http://127.0.0.1:18081/app.html \
-              | grep -oE '\./assets/[^"]+' \
-              | head -n 1 \
-              | sed 's#^\./##'
-          )"
-          test -n "$asset"
-          curl -fsS "http://127.0.0.1:18081/$asset" >/dev/null
-          for attempt in {1..30}; do
-            health="$(docker inspect --format '{{.State.Health.Status}}' activity-66-flow-ci)"
-            if [[ "$health" == "healthy" ]]; then
-              break
-            fi
-            if [[ "$health" == "unhealthy" ]]; then
-              docker logs activity-66-flow-ci
-              exit 1
-            fi
-            sleep 2
-          done
-          test "$(docker inspect --format '{{.State.Health.Status}}' activity-66-flow-ci)" = "healthy"
-
-      - name: Remove smoke-test container
-        if: always()
-        run: docker rm --force activity-66-flow-ci || true
-
-  deploy:
-    needs: [preflight, build, validate-image]
-    if: needs.preflight.outputs.configured == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    env:
-      ALIYUN_HOST: ${{ secrets.ALIYUN_HOST }}
-      ALIYUN_USER: ${{ secrets.ALIYUN_USER }}
-      ALIYUN_PORT: ${{ secrets.ALIYUN_PORT || '22' }}
-      ALIYUN_APP_DIR: ${{ vars.ALIYUN_APP_DIR || '/opt/activity-66' }}
-      ALIYUN_HTTP_PORT: ${{ vars.ALIYUN_HTTP_PORT || '80' }}
-      ALIYUN_HTTP_BIND: ${{ vars.ALIYUN_HTTP_BIND || '0.0.0.0' }}
-      ALIYUN_HEALTHCHECK_URL: ${{ vars.ALIYUN_HEALTHCHECK_URL || '' }}
-      ALIYUN_DOCKER_PLATFORM: ${{ vars.ALIYUN_DOCKER_PLATFORM || 'linux/amd64' }}
-      KEEP_IMAGES: "3"
-      SSH_STRICT_HOST_CHECKING: "yes"
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: activity-66-dist-${{ github.sha }}
-          path: dist
-
       - name: Configure SSH
+        if: steps.cfg.outputs.configured == 'true'
         env:
           SSH_KEY: ${{ secrets.ALIYUN_SSH_KEY }}
           KNOWN_HOSTS: ${{ secrets.ALIYUN_KNOWN_HOSTS }}
+          HOST: ${{ secrets.ALIYUN_HOST }}
+          PORT: ${{ secrets.ALIYUN_PORT || '22' }}
         run: |
           set -euo pipefail
-          : "${ALIYUN_HOST:?ALIYUN_HOST is required}"
-          : "${SSH_KEY:?ALIYUN_SSH_KEY is required}"
           install -m 700 -d "$HOME/.ssh"
           printf '%s\n' "$SSH_KEY" > "$HOME/.ssh/activity_66_deploy"
           chmod 600 "$HOME/.ssh/activity_66_deploy"
           if [ -n "${KNOWN_HOSTS:-}" ]; then
             printf '%s\n' "$KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
           else
-            ssh-keyscan -T 10 -p "$ALIYUN_PORT" -H "$ALIYUN_HOST" > "$HOME/.ssh/known_hosts"
+            ssh-keyscan -T 10 -p "$PORT" -H "$HOST" > "$HOME/.ssh/known_hosts"
           fi
           chmod 600 "$HOME/.ssh/known_hosts"
           test -s "$HOME/.ssh/known_hosts"
 
-      - name: Build and deploy Docker image
-        run: bash deploy/deploy-docker-image.sh
-
-      - name: Write deployment summary
+      - name: Upload site files
+        if: steps.cfg.outputs.configured == 'true'
+        env:
+          HOST: ${{ secrets.ALIYUN_HOST }}
+          USER: ${{ secrets.ALIYUN_USER || 'deploy' }}
+          PORT: ${{ secrets.ALIYUN_PORT || '22' }}
         run: |
-          echo "### activity-66 portal image deployed" >> "$GITHUB_STEP_SUMMARY"
+          set -euo pipefail
+          SSH_OPTS="-p $PORT -i $HOME/.ssh/activity_66_deploy -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes"
+          REMOTE="$USER@$HOST"
+
+          ssh $SSH_OPTS "$REMOTE" "mkdir -p '$APP_DIR'"
+          # --delay-updates stages every file and renames at the end, so the live
+          # directory is never a half-written mix of two builds.
+          rsync -az --delete --delay-updates --chmod=D755,F644 \
+            -e "ssh $SSH_OPTS" \
+            dist/ "$REMOTE:$APP_DIR/"
+
+          echo "Released ${GITHUB_SHA:0:12}"
+
+      - name: Verify public site
+        if: steps.cfg.outputs.configured == 'true' && vars.ALIYUN_PUBLIC_URL != ''
+        env:
+          PUBLIC_URL: ${{ vars.ALIYUN_PUBLIC_URL }}
+        run: |
+          set -euo pipefail
+          base="${PUBLIC_URL%/}"
+          for path in / /app.html /apply.html; do
+            code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$base$path" || echo 000)"
+            [ "$code" = "200" ] || { echo "FAIL $path -> $code"; exit 1; }
+            echo "ok   $path"
+          done
+          live="$(curl -sS --max-time 20 "$base/REVISION" | tr -d '[:space:]' || true)"
+          if [ "$live" != "$GITHUB_SHA" ]; then
+            echo "FAIL revision: live='$live' expected='$GITHUB_SHA'"
+            exit 1
+          fi
+          echo "ok   revision ${live:0:12}"
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "### activity-66 portal" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Image: \`${PORTAL_IMAGE:-unknown}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Compose directory: \`${ALIYUN_APP_DIR}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Commit: \`${GITHUB_SHA:0:12}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Target: \`${{ secrets.ALIYUN_HOST || 'not configured' }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Public URL: \`${{ vars.ALIYUN_PUBLIC_URL || 'not configured' }}\`" >> "$GITHUB_STEP_SUMMARY"

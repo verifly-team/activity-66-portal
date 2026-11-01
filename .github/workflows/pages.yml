@@ -1,8 +1,7 @@
 name: Deploy portal preview to GitHub Pages
 
+# 手动触发，避免每次 push 都往 GitHub Pages 上再发一份。
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:

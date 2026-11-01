@@ -6,8 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build && node scripts/build-standalone.mjs",
-    "preview": "vite preview",
-    "deploy:aliyun": "bash deploy/deploy-local.sh"
+    "preview": "vite preview"
   },
   "dependencies": {
     "leaflet": "^1.9.4",

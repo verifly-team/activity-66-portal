@@ -1,238 +1,112 @@
-# 阿里云 ECS Docker 镜像发布
+# 部署说明（宝塔面板）
 
-这是一个适合临时网站的镜像部署方案。GitHub Actions 构建静态站和 Docker
-镜像，把压缩镜像通过 SSH 传到 ECS，再用 Docker Compose 启动。
+纯静态站，全程只在宝塔里**新增一个站点**，不改任何 nginx 配置、不装 Docker、
+不装 Node、不装 certbot。
 
-不使用阿里云 ACR，因此不需要 Registry 地址、命名空间或镜像仓库密码。
-
-需要走云效 Flow（ACR + 主机组，不开放公网 SSH）时，见
-[`flow/README.md`](./flow/README.md)。
+站点根目录就是：
 
 ```text
-push main / 手动运行
-  -> npm ci
-  -> npm run build
-  -> docker build activity-66-portal:<release>
-  -> docker save | gzip
-  -> rsync 到 ECS
-  -> docker load
-  -> docker compose up -d
-  -> 容器健康检查
-  -> 失败时恢复上一个镜像
+/verifly/activity-66-portal
 ```
 
-镜像本身包含 `dist/` 和 nginx 配置。线上不再使用静态软链目录。
+CI 构建完把 `dist/` 直接 rsync 到这个目录（带 `--delete`），就这一个目录，
+里面直接是 `index.html`、`assets/`。发布完刷新就是新版本。
 
-## GitHub 配置
+## 一、宝塔新增站点
 
-在仓库的 Settings -> Secrets and variables -> Actions 中配置。
+网站 → 添加站点：
 
-Secrets：
+| 项目 | 填什么 |
+| --- | --- |
+| 域名 | `66thandsecondlovehealgiveus.com`、`www.66thandsecondlovehealgiveus.com` |
+| 根目录 | `/verifly/activity-66-portal` |
+| PHP 版本 | 纯静态 |
+| 数据库 / FTP | 都不建 |
 
-| 名称 | 必填 | 说明 |
-| --- | --- | --- |
-| `ALIYUN_HOST` | 是 | ECS 公网 IP 或域名 |
-| `ALIYUN_USER` | 是 | 建议使用专用的 `deploy` 用户 |
-| `ALIYUN_SSH_KEY` | 是 | 部署私钥的完整内容 |
-| `ALIYUN_PORT` | 否 | SSH 端口，默认 `22` |
-| `ALIYUN_KNOWN_HOSTS` | 否 | 推荐固定 ECS 主机指纹 |
+宝塔建站点时会往这个目录放一个默认的 `index.html`，第一次发布会把它覆盖掉，
+属于正常现象。
 
-Variables：
+如果这台机器上还有别的站点占着这个域名，去那个站点里把域名解绑掉（点界面
+就行，别改它的配置），否则宝塔会提示域名已绑定。
 
-| 名称 | 默认值 | 说明 |
-| --- | --- | --- |
-| `ALIYUN_APP_DIR` | `/opt/activity-66` | ECS 上的 Compose 目录 |
-| `ALIYUN_HTTP_PORT` | `80` | 容器映射到宿主机的端口 |
-| `ALIYUN_HTTP_BIND` | `0.0.0.0` | 映射监听地址 |
-| `ALIYUN_DOCKER_PLATFORM` | `linux/amd64` | ECS 是 ARM 时改为 `linux/arm64` |
-| `ALIYUN_HEALTHCHECK_URL` | 空 | 默认检查 `http://127.0.0.1:<port>/app.html` |
+## 二、服务器上建部署用户
 
-如果三个必填 Secret 没有配置完整，Actions 仍会构建并保留 `dist` 产物，
-并在临时端口启动容器做冒烟测试，但会跳过 ECS 部署。
-
-## ECS 一次性准备
-
-以下命令按 Linux ECS 编写。`/opt/activity-66` 可以通过
-`ALIYUN_APP_DIR` 修改。
-
-### 1. 创建部署用户
+SSH 登录服务器执行这几行。`deploy` 只用来收文件，不给 root：
 
 ```bash
-id deploy >/dev/null 2>&1 || \
-  sudo useradd --create-home --shell /bin/bash deploy
-sudo mkdir -p /opt/activity-66/incoming
-sudo chown -R deploy:deploy /opt/activity-66
+useradd --create-home --shell /bin/bash deploy
+chown -R deploy:deploy /verifly/activity-66-portal
+chmod 755 /verifly/activity-66-portal
 ```
 
-部署用户只用于写入 Compose 文件和接收镜像，不需要 sudo。
+`deploy` 只用来往这个目录写文件，不给 root。宝塔的 nginx 用 www 用户读，
+目录 755、文件 644 就够。
 
-### 2. 安装 Docker
-
-Ubuntu 或 Debian：
-
-```bash
-sudo apt-get update
-sudo apt-get install -y docker.io docker-compose-v2 rsync curl gzip
-sudo systemctl enable --now docker
-```
-
-Alibaba Cloud Linux、CentOS 或 RHEL：
+## 三、本地生成密钥
 
 ```bash
-sudo dnf install -y docker rsync curl gzip
-sudo systemctl enable --now docker
-```
-
-确认 Docker Compose v2 可用：
-
-```bash
-docker compose version
-```
-
-如果发行版没有 Compose 插件，按 Docker 官方的 Compose v2 安装方式补充。
-
-把部署用户加入 Docker 组：
-
-```bash
-sudo usermod -aG docker deploy
-```
-
-修改组后需要重新登录，`deploy` 用户才能直接运行 Docker。
-
-### 3. 配置 SSH
-
-在本地生成专用密钥：
-
-```bash
-ssh-keygen -t ed25519 -C "github-actions-activity-66" \
-  -f ~/.ssh/activity-66_deploy -N ""
+ssh-keygen -t ed25519 -C "github-actions" -f ~/.ssh/activity-66_deploy -N ""
 ssh-copy-id -i ~/.ssh/activity-66_deploy.pub deploy@ECS_IP
 ```
 
-把私钥内容写入 GitHub Secret `ALIYUN_SSH_KEY`：
+## 四、GitHub 配置
+
+Settings → Secrets and variables → Actions。
+
+Secrets：
+
+| 名称 | 值 |
+| --- | --- |
+| `ALIYUN_HOST` | ECS 公网 IP |
+| `ALIYUN_USER` | `deploy` |
+| `ALIYUN_SSH_KEY` | 部署私钥全文（`~/.ssh/activity-66_deploy`） |
+| `ALIYUN_KNOWN_HOSTS` | `ssh-keyscan -p 22 -H ECS_IP` 的输出 |
+
+Variables：
+
+| 名称 | 值 |
+| --- | --- |
+| `ALIYUN_PUBLIC_URL` | `https://66thandsecondlovehealgiveus.com` |
+
+没配 `ALIYUN_HOST` 时 workflow 只构建不上传，可以放心先合并。
+
+## 五、跑第一次发布
+
+push `main`，或者手动运行 `Deploy portal to Aliyun ECS`。
+
+跑完目录里就是构建好的 `index.html`、`app.html`、`apply.html`、`assets/` 和
+`REVISION`。此时访问 `http://ECS_IP/` 就能看到完整页面，表单和上传都能在
+这一步先验一遍。
+
+## 六、宝塔里开 HTTPS
+
+站点设置 → SSL → Let's Encrypt → 申请 → 打开**强制 HTTPS**。
+
+宝塔会自己写续期任务。申请时域名必须已经解析到这台机器，否则验证过不了。
+
+## 七、验证
 
 ```bash
-pbcopy < ~/.ssh/activity-66_deploy
+curl -sI https://66thandsecondlovehealgiveus.com/apply.html
+curl -s  https://66thandsecondlovehealgiveus.com/REVISION
 ```
 
-主机指纹可以这样生成并写入 `ALIYUN_KNOWN_HOSTS`：
+第一个返回 200，第二个输出最新 commit。配了 `ALIYUN_PUBLIC_URL` 之后，workflow
+每次发布都会自动比对这两项，不一致就标红失败。
 
-```bash
-ssh-keyscan -p 22 -H ECS_IP
-```
+## 八、日常发布和回滚
 
-### 4. 放行端口
+发布就是 push main。
 
-ECS 安全组需要放行 SSH 端口。站点直接对外时再放行：
+回滚在 GitHub 上做：Actions → 找到上一次成功的 `Deploy portal to Aliyun ECS`
+→ Re-run all jobs。它会用那次的 commit 重新构建并覆盖上去，几十秒就好。
 
-- `80`：HTTP
-- `443`：HTTPS，使用域名和证书时
+服务器上不留历史版本，所以别在这个目录里手动放别的东西，`--delete` 会清掉
+目标目录里构建产物之外的文件。
 
-如果 Docker 放在已有宿主机 nginx 后面，可以只把 Docker 端口映射到
-`127.0.0.1:8080`，外部只开放 nginx 的 80/443。
+## 注意
 
-## 第一次部署
-
-Secrets 和 Variables 配置完成后，在 GitHub Actions 中选择：
-
-```text
-Deploy activity-66 portal image to Aliyun
--> Run workflow
-```
-
-也可以直接推送 `main`。
-
-成功后 ECS 上会有：
-
-```text
-/opt/activity-66/
-  docker-compose.yml
-  .env
-```
-
-运行的容器是：
-
-```text
-activity-66-portal
-```
-
-查看状态：
-
-```bash
-ssh deploy@ECS_IP \
-  'cd /opt/activity-66 && docker compose ps'
-ssh deploy@ECS_IP \
-  'docker inspect --format "{{.State.Health.Status}}" activity-66-portal'
-```
-
-## 已有 nginx 反向代理
-
-宿主机 nginx 可以这样转发到 Docker：
-
-```nginx
-location / {
-    proxy_pass http://127.0.0.1:8080;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-}
-```
-
-对应配置：
-
-```text
-ALIYUN_HTTP_BIND=127.0.0.1
-ALIYUN_HTTP_PORT=8080
-```
-
-如果 nginx 本身也在 Docker 容器里，需要使用宿主机网关或共享 Docker
-网络访问站点容器，不能直接使用容器内部的 `127.0.0.1`。
-
-## 本地手动发布
-
-```bash
-ALIYUN_HOST=ECS_IP \
-ALIYUN_USER=deploy \
-ALIYUN_SSH_KEY=~/.ssh/activity-66_deploy \
-ALIYUN_HTTP_PORT=80 \
-npm run deploy:aliyun
-```
-
-本地 Mac 默认构建 `linux/amd64` 镜像。ECS 是 ARM 时设置：
-
-```bash
-ALIYUN_DOCKER_PLATFORM=linux/arm64 npm run deploy:aliyun
-```
-
-## 回滚
-
-每次部署都会把当前镜像写入 `.env`。容器启动或健康检查失败时，脚本会自动
-恢复上一个镜像。ECS 默认只保留最近 3 个版本，避免临时站点反复部署后
-长期占用磁盘。镜像都带有：
-
-```text
-com.activity-66.portal=true
-```
-
-可以查看镜像：
-
-```bash
-ssh deploy@ECS_IP 'docker image ls activity-66-portal'
-```
-
-## 临时站点清理
-
-确认不再需要站点后，执行：
-
-```bash
-ssh deploy@ECS_IP
-cd /opt/activity-66
-docker compose down --rmi all --remove-orphans
-docker image prune -a --force --filter label=com.activity-66.portal=true
-cd /
-rm -rf -- /opt/activity-66
-```
-
-这样会停止容器、删除当前镜像和旧版本镜像，并清掉 Compose 文件。ECS 上
-如果另有共享 nginx 或域名，再单独删除对应的反向代理配置和 DNS 记录。
+- 服务器需要有 `rsync`，宝塔机器一般自带；没有的话 `apt install rsync`。
+- 根目录填 `/verifly/activity-66-portal`，别填成 `/verifly`，那样会读到上层目录，首页 404。
+- 切换完成后把域名从 GitHub Pages 解绑，并删掉 `.github/workflows/pages.yml`，
+  免得同一个域名有两份在线内容。
