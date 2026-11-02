@@ -42,6 +42,7 @@ jobs:
           test -n "$(find dist/assets -maxdepth 1 -name '*.js' -print -quit)"
           cp dist/app.html dist/index.html
           printf '%s\n' "$GITHUB_SHA" > dist/REVISION
+          npm run verify:dist
 
       - name: Replace files on the server
         env:
@@ -62,8 +63,8 @@ jobs:
           REMOTE="$SSH_USER@$HOST"
 
           ssh $SSH_OPTS "$REMOTE" "mkdir -p '$APP_DIR'"
-          # --delay-updates 先把文件传成临时名，最后一起改名，
-          # 访问过程中不会看到两个版本混在一起的目录。
+          # --delay-updates 能缩短新旧文件并存的窗口，但目录不是原子切换。
+          # 静态站资源量很小，保留这段提示是为了以后改版本目录时别误判。
           #
           # 宝塔自己放在站根目录的文件不能参与删除：acme-challenge 由 root
           # 创建，.user.ini 带 immutable 属性，deploy 用户删不动。
@@ -74,6 +75,10 @@ jobs:
             dist/ "$REMOTE:$APP_DIR/"
 
           echo "Released ${GITHUB_SHA:0:12}"
+
+      - name: Public URL not configured
+        if: vars.ALIYUN_PUBLIC_URL == ''
+        run: echo "::warning::ALIYUN_PUBLIC_URL 未配置，已跳过发布后线上检查"
 
       - name: Check the public site
         if: vars.ALIYUN_PUBLIC_URL != ''
@@ -86,6 +91,20 @@ jobs:
             code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$base$path" || echo 000)"
             [ "$code" = "200" ] || { echo "FAIL $path -> $code"; exit 1; }
             echo "ok   $path"
+          done
+          for page in "" /app.html /apply.html; do
+            html="$(curl -fsS --max-time 20 "$base$page")"
+            assets="$(
+              printf '%s' "$html" \
+                | grep -oE '\./assets/[^"]+' \
+                | sort -u
+            )"
+            [ -n "$assets" ] || { echo "FAIL $page has no assets"; exit 1; }
+            while IFS= read -r asset; do
+              code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$base/${asset#./}" || echo 000)"
+              [ "$code" = "200" ] || { echo "FAIL $asset -> $code"; exit 1; }
+            done <<< "$assets"
+            echo "ok   assets for ${page:-/}"
           done
           live="$(curl -sS --max-time 20 "$base/REVISION" | tr -d '[:space:]' || true)"
           [ "$live" = "$GITHUB_SHA" ] || { echo "FAIL revision: live='$live'"; exit 1; }

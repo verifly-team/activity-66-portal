@@ -21,8 +21,8 @@ const CONTACT_EMAIL = "buzzlu@qq.com";
 const DOCX_URL = `${import.meta.env.BASE_URL}66th-merchant-application-form.docx`;
 const DRAFT_KEY = "verifly:exhibitor-application:v1";
 const MAX_FILES = 10;
-const MAX_FILE_MB = 3;
-const MAX_TOTAL_MB = 30;
+const MAX_FILE_MB = 20;
+const MAX_TOTAL_MB = 100;
 const MAX_FILE_BYTES = MAX_FILE_MB * 1024 * 1024;
 const MAX_TOTAL_BYTES = MAX_TOTAL_MB * 1024 * 1024;
 const UPLOAD_TIMEOUT_MS = 120_000;
@@ -30,6 +30,12 @@ const SUBMIT_TIMEOUT_MS = 180_000;
 const ALLOWED_EXT = ["jpg", "jpeg", "png", "webp", "heic", "pdf", "zip"];
 const PHONE_RE = /^1[3-9]\d{9}$/;
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/;
+const SCHEMA_KEY_RE = /^[a-z][a-z0-9_]{0,63}$/;
+
+const DEFAULT_FEEDBACK =
+  "提交后，主办方将在 48 小时内反馈审核结果或补充资料需求。2026.11.8 为第一轮公开招募截止时间，统一回复时间为 2026.11.10；2026.11.28 为最终轮公开招募截止时间，统一回复时间为 2026.12.1。";
+const DEFAULT_ITEMS_HINT =
+  "添加代表商品可增加店家品牌力，显示商家独特性，会增加入选概率";
 
 const CATEGORIES = [
   { value: "bag", label: "箱包手袋" },
@@ -43,18 +49,23 @@ const CATEGORIES = [
 const ZONES = [
   {
     value: "A",
-    title: "Vintage Culture 及 Designer Archive",
+    title: "收藏级 Archive",
     desc: "具年代、系列或出处依据的收藏级服饰与藏品",
   },
   {
     value: "B",
-    title: "工装、街头潮流",
+    title: "工装与街头",
     desc: "相关品牌的二手服饰",
   },
   {
     value: "C",
-    title: "二手名牌、Outlet 及样衣",
+    title: "二手名牌／样衣",
     desc: "过季清仓与样衣；新品和二手须分别标示",
+  },
+  {
+    value: "D",
+    title: "D 区（新增开放）",
+    desc: "本期新增开放网页报名；具体经营内容与陈列安排由主办方审核确认",
   },
 ] as const;
 
@@ -81,15 +92,240 @@ const SECTIONS = [
   { id: "brand", num: "01", title: "品牌与联络" },
   { id: "categories", num: "02", title: "品类与区域" },
   { id: "inventory", num: "03", title: "本次货盘" },
-  { id: "attachments", num: "04", title: "资料与附件" },
-  { id: "confirm", num: "05", title: "确认提交" },
+  { id: "profile", num: "04", title: "品牌背景与经营情况" },
+  { id: "attachments", num: "05", title: "资料与附件" },
+  { id: "confirm", num: "06", title: "确认提交" },
 ] as const;
 
 type Category = (typeof CATEGORIES)[number]["value"];
-type Zone = (typeof ZONES)[number]["value"];
+type Zone = string;
 type EntityType = (typeof ENTITY_TYPES)[number]["value"];
 type StructureKey = (typeof STRUCTURE_FIELDS)[number]["key"];
 type UploadKind = (typeof UPLOAD_KINDS)[number]["value"];
+type ZoneOption = { value: string; title: string; desc?: string };
+type QuestionType =
+  | "year"
+  | "url_list"
+  | "textarea"
+  | "multi"
+  | "single"
+  | "bool";
+type QuestionValue = string | string[] | boolean | null;
+type SchemaOption = { value: string | boolean; label: string };
+type SchemaQuestion = {
+  key: string;
+  label: string;
+  type: QuestionType;
+  required: boolean;
+  help?: string;
+  placeholder?: string;
+  min?: number;
+  max?: number;
+  min_items?: number;
+  max_items?: number;
+  min_length?: number;
+  max_length?: number;
+  options?: SchemaOption[];
+};
+type SchemaGroup = { title: string; questions: SchemaQuestion[] };
+type FormSchema = {
+  version: string;
+  enforced: boolean;
+  requiredHint: string;
+  feedback: string;
+  itemsHint: string;
+  zones: ZoneOption[];
+  groups: SchemaGroup[];
+};
+
+const DEFAULT_SCHEMA_GROUPS: SchemaGroup[] = [
+  {
+    title: "1. 品牌联络与定位特色",
+    questions: [
+      {
+        key: "founded_year",
+        label: "品牌成立年份",
+        type: "year",
+        required: true,
+        min: 1900,
+        max: 2100,
+        help: "填四位年份，例如 2018",
+      },
+      {
+        key: "social_links",
+        label: "Instagram / 小红书 / 抖音",
+        type: "url_list",
+        required: true,
+        min_items: 1,
+        max_items: 5,
+        placeholder: "https://...",
+        help: "可多填，需以 http:// 或 https:// 开头",
+      },
+      {
+        key: "brand_intro",
+        label: "品牌简介",
+        type: "textarea",
+        required: true,
+        min_length: 100,
+        max_length: 300,
+        help: "100–300 字",
+      },
+      {
+        key: "channels",
+        label: "主要经营渠道",
+        type: "multi",
+        required: true,
+        min_items: 1,
+        options: [
+          { value: "online_store", label: "线上店铺" },
+          { value: "physical_store", label: "线下实体店" },
+          { value: "personal_social", label: "个人社交媒体" },
+          { value: "market_stall", label: "市集摆摊" },
+          { value: "multi_channel", label: "多渠道经营" },
+        ],
+      },
+      {
+        key: "has_physical_store",
+        label: "是否有实体店？",
+        type: "bool",
+        required: true,
+        options: [
+          { value: true, label: "有" },
+          { value: false, label: "没有" },
+        ],
+      },
+      {
+        key: "attended_other_events",
+        label: "是否参加过其他市集或展会？",
+        type: "bool",
+        required: true,
+        options: [
+          { value: true, label: "有" },
+          { value: false, label: "没有" },
+        ],
+      },
+      {
+        key: "past_experience",
+        label: "过往参展经历",
+        type: "textarea",
+        required: false,
+        max_length: 1000,
+        help: "选填，简单描述参加过哪些市集或展会",
+      },
+    ],
+  },
+  {
+    title: "2. 品牌定位与特色",
+    questions: [
+      {
+        key: "brand_specialty",
+        label: "你认为自己的品牌最有特色的地方是什么？",
+        type: "textarea",
+        required: true,
+        min_length: 100,
+        max_length: 300,
+        help: "100–300 字",
+      },
+      {
+        key: "target_consumers",
+        label: "你的品牌主要面向哪一类消费者？",
+        type: "single",
+        required: true,
+        options: [
+          { value: "vintage", label: "Vintage／古着爱好者" },
+          { value: "street", label: "潮流及街头文化消费者" },
+          { value: "designer", label: "Designer／奢侈品消费者" },
+          { value: "young", label: "年轻消费群体" },
+          { value: "collector", label: "收藏爱好者" },
+          { value: "other", label: "其他" },
+        ],
+      },
+      {
+        key: "planned_activities",
+        label: "本次是否有计划推出特别商品或活动？",
+        type: "multi",
+        required: true,
+        min_items: 1,
+        help: "选「没有特别安排」时不能再选其他",
+        options: [
+          { value: "limited", label: "限量商品" },
+          { value: "first_release", label: "首次公开发售" },
+          { value: "discount", label: "特别折扣" },
+          { value: "collab", label: "品牌联名" },
+          { value: "onsite", label: "现场互动活动" },
+          { value: "pr_license", label: "品牌合作及宣传授权" },
+          { value: "none", label: "没有特别安排" },
+        ],
+      },
+    ],
+  },
+  {
+    title: "3. 品牌意愿与授权",
+    questions: [
+      {
+        key: "willing_to_promote",
+        label: "是否愿意配合主办方进行活动前的品牌宣传？",
+        type: "single",
+        required: true,
+        options: [
+          {
+            value: "provide_material",
+            label:
+              "愿意提供品牌照片及商品素材；配合品牌介绍及社交媒体宣传；转发官方活动宣传",
+          },
+          { value: "need_talk", label: "希望主办方与我们进一步沟通" },
+        ],
+      },
+      {
+        key: "authorize_media",
+        label:
+          "是否同意主办方在活动宣传及回顾中使用品牌提供的照片、商品图片及品牌名称？",
+        type: "single",
+        required: true,
+        options: [
+          { value: "agree", label: "同意" },
+          { value: "need_scope", label: "需要另行确认授权范围" },
+        ],
+      },
+    ],
+  },
+];
+
+const DEFAULT_SCHEMA: FormSchema = {
+  version: "v2",
+  enforced: false,
+  requiredHint: "带 * 为必填项",
+  feedback: DEFAULT_FEEDBACK,
+  itemsHint: DEFAULT_ITEMS_HINT,
+  zones: ZONES.map((zone) => ({ ...zone })),
+  groups: DEFAULT_SCHEMA_GROUPS,
+};
+
+const DEFAULT_QUESTIONS = DEFAULT_SCHEMA_GROUPS.flatMap(
+  (group) => group.questions,
+);
+const REQUIRED_SCHEMA_ZONES = ["A", "B", "C", "D"];
+const REQUIRED_QUESTION_KEYS = DEFAULT_QUESTIONS.map((question) => question.key);
+const RESERVED_QUESTION_KEYS = new Set([
+  "brand_name",
+  "contact_name",
+  "phone",
+  "wechat",
+  "email",
+  "city",
+  "entity_type",
+  "is_first_time",
+  "categories",
+  "zones",
+  "expected_qty",
+  "price_min",
+  "price_max",
+  "structure",
+  "items",
+  "file_ids",
+  "consent",
+  "source",
+]);
 
 type ItemDraft = {
   key: string;
@@ -125,6 +361,7 @@ type FormState = {
   price_max: string;
   structure: Record<StructureKey, string>;
   items: ItemDraft[];
+  answers: Record<string, QuestionValue>;
   files: UploadEntry[];
   consent: boolean;
 };
@@ -160,6 +397,22 @@ function createItem(): ItemDraft {
   };
 }
 
+function emptyAnswer(question: SchemaQuestion): QuestionValue {
+  if (question.type === "multi") return [];
+  if (question.type === "url_list") return [""];
+  if (question.type === "bool") return null;
+  return "";
+}
+
+function createInitialAnswers() {
+  return Object.fromEntries(
+    DEFAULT_QUESTIONS.map((question) => [
+      question.key,
+      emptyAnswer(question),
+    ]),
+  );
+}
+
 function createInitialForm(): FormState {
   return {
     brand_name: "",
@@ -182,6 +435,7 @@ function createInitialForm(): FormState {
       replica: "",
     },
     items: [createItem(), createItem(), createItem()],
+    answers: createInitialAnswers(),
     files: [],
     consent: false,
   };
@@ -228,6 +482,10 @@ function loadDraft(): { form: FormState; savedAt: string | null } {
         ...parsed,
         structure: { ...base.structure, ...(parsed.structure ?? {}) },
         items,
+        answers:
+          parsed.answers && typeof parsed.answers === "object"
+            ? { ...base.answers, ...parsed.answers }
+            : base.answers,
         files,
         consent: false,
       },
@@ -259,6 +517,319 @@ function formatSize(bytes: number) {
   if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   if (bytes >= 1024) return `${Math.round(bytes / 1024)} KB`;
   return `${bytes} B`;
+}
+
+function textLength(value: string) {
+  return Array.from(value.trim()).length;
+}
+
+function uniqueStrings(values: string[]) {
+  return Array.from(
+    new Set(values.map((value) => value.trim()).filter(Boolean)),
+  );
+}
+
+function structureState(sourceForm: FormState) {
+  const values = STRUCTURE_FIELDS.map((field) =>
+    Number.parseInt(sourceForm.structure[field.key] || "0", 10),
+  );
+  const touched = STRUCTURE_FIELDS.some(
+    (field) => sourceForm.structure[field.key] !== "",
+  );
+  const total = values.reduce(
+    (sum, value) => sum + (Number.isFinite(value) ? value : 0),
+    0,
+  );
+  return {
+    values,
+    touched,
+    total,
+    filled: touched && !values.every((value) => value === 0),
+    valid:
+      !touched || values.every((value) => value === 0) || total === 100,
+  };
+}
+
+function ensureHttpProtocol(value: string) {
+  const link = value.trim();
+  if (
+    !link ||
+    /^https?:\/\//i.test(link) ||
+    /^[a-z][a-z0-9+.-]*:/i.test(link)
+  ) {
+    return link;
+  }
+  return link.startsWith("//") ? `https:${link}` : `https://${link}`;
+}
+
+function isHttpUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return (
+      (url.protocol === "http:" || url.protocol === "https:") &&
+      Boolean(url.hostname)
+    );
+  } catch {
+    return false;
+  }
+}
+
+function answerAsString(value: QuestionValue | undefined) {
+  return typeof value === "string" ? value : "";
+}
+
+function answerAsStrings(value: QuestionValue | undefined) {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
+}
+
+function answerAsBool(value: QuestionValue | undefined) {
+  return typeof value === "boolean" ? value : null;
+}
+
+function questionAnswered(question: SchemaQuestion, value: QuestionValue | undefined) {
+  if (question.type === "bool") return typeof value === "boolean";
+  if (question.type === "multi" || question.type === "url_list") {
+    return uniqueStrings(answerAsStrings(value)).length > 0;
+  }
+  return answerAsString(value).trim().length > 0;
+}
+
+function schemaQuestions(schema: FormSchema) {
+  return schema.groups.flatMap((group) => group.questions);
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function normalizeOption(value: unknown): SchemaOption | null {
+  const option = asRecord(value);
+  if (!option || typeof option.label !== "string") return null;
+  if (typeof option.value !== "string" && typeof option.value !== "boolean") {
+    return null;
+  }
+  return { value: option.value, label: option.label };
+}
+
+function normalizeQuestion(
+  value: unknown,
+  fallback?: SchemaQuestion,
+): SchemaQuestion | null {
+  const question = asRecord(value);
+  if (!question || typeof question.key !== "string" || !question.key.trim()) {
+    return null;
+  }
+  const key = question.key.trim();
+  if (!SCHEMA_KEY_RE.test(key) || RESERVED_QUESTION_KEYS.has(key)) return null;
+  const type = question.type;
+  if (
+    type !== "year" &&
+    type !== "url_list" &&
+    type !== "textarea" &&
+    type !== "multi" &&
+    type !== "single" &&
+    type !== "bool"
+  ) {
+    return null;
+  }
+
+  const rawOptions = Array.isArray(question.options)
+    ? question.options
+        .map(normalizeOption)
+        .filter((option): option is SchemaOption => Boolean(option))
+    : [];
+  const typedOptions = rawOptions.filter((option) =>
+    type === "bool"
+      ? typeof option.value === "boolean"
+      : typeof option.value === "string",
+  );
+  const options = typedOptions.length ? typedOptions : fallback?.options;
+  if (
+    (type === "single" || type === "multi" || type === "bool") &&
+    !options?.length
+  ) {
+    return null;
+  }
+  const numberValue = (field: keyof SchemaQuestion) => {
+    const candidate = question[field];
+    if (typeof candidate === "number" && Number.isFinite(candidate)) {
+      return Math.max(0, Math.trunc(candidate));
+    }
+    const fallbackValue = fallback?.[field];
+    return typeof fallbackValue === "number"
+      ? Math.max(0, Math.trunc(fallbackValue))
+      : undefined;
+  };
+
+  return {
+    key,
+    label:
+      typeof question.label === "string" && question.label.trim()
+        ? question.label
+        : fallback?.label ?? key,
+    type,
+    required:
+      typeof question.required === "boolean"
+        ? question.required
+        : fallback?.required ?? false,
+    help:
+      typeof question.help === "string" ? question.help : fallback?.help,
+    placeholder:
+      typeof question.placeholder === "string"
+        ? question.placeholder
+        : fallback?.placeholder,
+    min: numberValue("min"),
+    max: numberValue("max"),
+    min_items: numberValue("min_items"),
+    max_items: numberValue("max_items"),
+    min_length: numberValue("min_length"),
+    max_length: numberValue("max_length"),
+    options,
+  };
+}
+
+function normalizeSchema(value: unknown): FormSchema {
+  const schema = asRecord(value);
+  if (!schema) return DEFAULT_SCHEMA;
+  const copy = asRecord(schema.copy);
+  const fallbackByKey = new Map(
+    DEFAULT_QUESTIONS.map((question) => [question.key, question]),
+  );
+
+  const rawGroups = Array.isArray(schema.groups) ? schema.groups : [];
+  const seenQuestionKeys = new Set<string>();
+  const groups = rawGroups
+    .map((rawGroup, index) => {
+      const group = asRecord(rawGroup);
+      if (!group || !Array.isArray(group.questions)) return null;
+      const questions = group.questions
+        .map((rawQuestion) => {
+          const key = asRecord(rawQuestion)?.key;
+          const question = normalizeQuestion(
+            rawQuestion,
+            typeof key === "string" ? fallbackByKey.get(key) : undefined,
+          );
+          if (!question || seenQuestionKeys.has(question.key)) return null;
+          seenQuestionKeys.add(question.key);
+          return question;
+        })
+        .filter((question): question is SchemaQuestion => Boolean(question));
+      if (!questions.length) return null;
+      return {
+        title:
+          typeof group.title === "string" && group.title.trim()
+            ? group.title
+            : DEFAULT_SCHEMA_GROUPS[index]?.title ?? "品牌背景与经营情况",
+        questions,
+      };
+    })
+    .filter((group): group is SchemaGroup => Boolean(group));
+
+  const localZoneByValue = new Map(
+    DEFAULT_SCHEMA.zones.map((zone) => [zone.value, zone]),
+  );
+  const seenZones = new Set<string>();
+  const zones: ZoneOption[] = [];
+  for (const rawZone of Array.isArray(schema.zones) ? schema.zones : []) {
+    const zone = asRecord(rawZone);
+    if (!zone || typeof zone.value !== "string" || !zone.value.trim()) continue;
+    const value = zone.value.trim();
+    if (seenZones.has(value)) continue;
+    seenZones.add(value);
+    const local = localZoneByValue.get(value);
+    zones.push({
+      value,
+      title:
+        typeof zone.label === "string" && zone.label.trim()
+          ? zone.label
+          : local?.title ?? value,
+      desc: local?.desc,
+    });
+  }
+  const hasRequiredZones = REQUIRED_SCHEMA_ZONES.every((value) =>
+    seenZones.has(value),
+  );
+  const hasRequiredQuestions = REQUIRED_QUESTION_KEYS.every((key) =>
+    seenQuestionKeys.has(key),
+  );
+
+  return {
+    version:
+      typeof schema.version === "string" && schema.version.trim()
+        ? schema.version
+        : DEFAULT_SCHEMA.version,
+    enforced:
+      typeof schema.enforced === "boolean"
+        ? schema.enforced
+        : DEFAULT_SCHEMA.enforced,
+    requiredHint:
+      typeof schema.required_hint === "string" && schema.required_hint.trim()
+        ? schema.required_hint
+        : DEFAULT_SCHEMA.requiredHint,
+    feedback:
+      copy && typeof copy.feedback === "string" && copy.feedback.trim()
+        ? copy.feedback
+        : DEFAULT_SCHEMA.feedback,
+    itemsHint:
+      copy && typeof copy.items_hint === "string" && copy.items_hint.trim()
+        ? copy.items_hint
+        : DEFAULT_SCHEMA.itemsHint,
+    zones: hasRequiredZones ? zones : DEFAULT_SCHEMA.zones,
+    groups: hasRequiredQuestions ? groups : DEFAULT_SCHEMA.groups,
+  };
+}
+
+function normalizeFormAnswers(sourceForm: FormState, schema: FormSchema) {
+  const answers = { ...sourceForm.answers };
+  for (const question of schemaQuestions(schema)) {
+    const value = answers[question.key];
+    if (question.type === "url_list") {
+      answers[question.key] = uniqueStrings(
+        answerAsStrings(value).map(ensureHttpProtocol),
+      );
+    } else if (question.type === "multi") {
+      answers[question.key] = uniqueStrings(answerAsStrings(value));
+    }
+  }
+  return { ...sourceForm, answers };
+}
+
+function buildSurveyPayload(
+  schema: FormSchema,
+  answers: Record<string, QuestionValue>,
+) {
+  const payload: Record<string, unknown> = {};
+  for (const question of schemaQuestions(schema)) {
+    const value = answers[question.key];
+    if (question.type === "bool") {
+      if (typeof value === "boolean") payload[question.key] = value;
+      continue;
+    }
+    if (question.type === "multi") {
+      const selected = uniqueStrings(answerAsStrings(value));
+      if (selected.length) payload[question.key] = selected;
+      continue;
+    }
+    if (question.type === "url_list") {
+      const links = uniqueStrings(answerAsStrings(value));
+      if (links.length) payload[question.key] = links;
+      continue;
+    }
+
+    const text = answerAsString(value).trim();
+    if (!text) continue;
+    if (question.type === "year") {
+      const year = Number.parseInt(text, 10);
+      if (Number.isFinite(year)) payload[question.key] = year;
+    } else {
+      payload[question.key] = text;
+    }
+  }
+  return payload;
 }
 
 function formatDateTime(iso: string) {
@@ -296,7 +867,21 @@ function readApiMessage(data: unknown, fallback: string) {
     "message" in data.error &&
     typeof data.error.message === "string"
   ) {
-    return data.error.message;
+    const error = data.error as {
+      message: string;
+      fields?: Array<{ message?: unknown }>;
+    };
+    const fieldMessage = Array.isArray(error.fields)
+      ? error.fields.find(
+          (field) =>
+            field &&
+            typeof field.message === "string" &&
+            field.message.trim(),
+        )?.message
+      : null;
+    return typeof fieldMessage === "string"
+      ? fieldMessage.trim()
+      : error.message;
   }
   return fallback;
 }
@@ -330,10 +915,19 @@ async function fetchWithTimeout(
 }
 
 function errorIdFor(key: string) {
-  if (/^items\[\d+\]\./.test(key)) {
-    const index = key.match(/^items\[(\d+)\]/)?.[1] ?? "0";
-    return `item-${index}-name`;
+  const itemMatch = key.match(
+    /^items\[(\d+)\](?:\.(name|era_series|condition_source|price))?/,
+  );
+  if (itemMatch) {
+    const fieldByKey: Record<string, string> = {
+      name: "name",
+      era_series: "era",
+      condition_source: "condition",
+      price: "price",
+    };
+    return `item-${itemMatch[1]}-${fieldByKey[itemMatch[2] ?? "name"]}`;
   }
+  const rootKey = key.split(/[.\[]/, 1)[0];
   const groups: Record<string, string> = {
     contact: "field-contact",
     categories: "field-categories",
@@ -342,7 +936,7 @@ function errorIdFor(key: string) {
     uploads: "field-uploads",
     consent: "field-consent",
   };
-  return groups[key] ?? key;
+  return groups[rootKey] ?? rootKey;
 }
 
 function focusableIn(element: HTMLElement | null) {
@@ -392,6 +986,7 @@ function ApplyFooter() {
 export default function ApplyPage() {
   const [initialDraft] = useState(loadDraft);
   const [form, setForm] = useState<FormState>(initialDraft.form);
+  const [schema, setSchema] = useState<FormSchema>(DEFAULT_SCHEMA);
   const [errors, setErrors] = useState<Errors>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [uploadNotice, setUploadNotice] = useState<string | null>(null);
@@ -409,6 +1004,30 @@ export default function ApplyPage() {
 
   useEffect(() => {
     document.title = "商家参展申请｜66th & 2nd Ave.";
+  }, []);
+
+  useEffect(() => {
+    if (!APPLICATION_API_ENABLED) return;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 8_000);
+    void fetch(`${API_BASE}/api/v1/form-schema`, {
+      signal: controller.signal,
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .then((data) => setSchema(normalizeSchema(data)))
+      .catch(() => {
+        // 问卷接口尚未发布时使用与当前 v2 契约一致的本地兜底。
+      })
+      .finally(() => window.clearTimeout(timer));
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
   }, []);
 
   useEffect(() => {
@@ -461,6 +1080,69 @@ export default function ApplyPage() {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
+  function updateAnswer(key: string, value: QuestionValue) {
+    setForm((prev) => ({
+      ...prev,
+      answers: { ...prev.answers, [key]: value },
+    }));
+    clearError(key);
+  }
+
+  function toggleAnswerOption(question: SchemaQuestion, value: string | boolean) {
+    const current = form.answers[question.key];
+    if (question.type === "multi") {
+      const selected = answerAsStrings(current);
+      const option = String(value);
+      let next: string[];
+      if (selected.includes(option)) {
+        next = selected.filter((item) => item !== option);
+      } else if (question.key === "planned_activities" && option === "none") {
+        next = ["none"];
+      } else if (question.key === "planned_activities") {
+        next = [...selected.filter((item) => item !== "none"), option];
+      } else {
+        next = [...selected, option];
+      }
+      updateAnswer(question.key, next);
+      return;
+    }
+    updateAnswer(question.key, value);
+  }
+
+  function updateLink(question: SchemaQuestion, index: number, value: string) {
+    const links = answerAsStrings(form.answers[question.key]);
+    const next = [...links];
+    next[index] = value;
+    updateAnswer(question.key, next);
+  }
+
+  function addLink(question: SchemaQuestion) {
+    const links = answerAsStrings(form.answers[question.key]);
+    if (links.length >= (question.max_items ?? 5)) return;
+    updateAnswer(question.key, [...links, ""]);
+  }
+
+  function removeLink(question: SchemaQuestion, index: number) {
+    const links = answerAsStrings(form.answers[question.key]);
+    if (links.length <= 1) {
+      updateAnswer(question.key, [""]);
+      return;
+    }
+    updateAnswer(
+      question.key,
+      links.filter((_, linkIndex) => linkIndex !== index),
+    );
+  }
+
+  function normalizeLink(question: SchemaQuestion, index: number) {
+    const links = answerAsStrings(form.answers[question.key]);
+    const link = ensureHttpProtocol(links[index] ?? "");
+    if (link === (links[index] ?? "").trim()) return;
+    const next = [...links];
+    next[index] = link;
+    updateAnswer(question.key, next);
+  }
+
   function clearError(key: string) {
     setErrors((prev) => {
       if (!(key in prev)) return prev;
@@ -505,8 +1187,7 @@ export default function ApplyPage() {
         itemIndex === index ? { ...item, [key]: value } : item,
       ),
     }));
-    clearError(`items[${index}].name`);
-    clearError(`items[${index}].price`);
+    clearError(`items[${index}].${key}`);
   }
 
   function addItem() {
@@ -559,15 +1240,26 @@ export default function ApplyPage() {
       if (!response.ok) {
         throw new Error(readApiMessage(data, "附件上传失败，请重试"));
       }
-      const uploaded = data as { file_id: string; size?: number };
+      const uploaded = data as { file_id?: unknown; size?: unknown } | null;
+      if (
+        !uploaded ||
+        typeof uploaded.file_id !== "string" ||
+        !uploaded.file_id.trim()
+      ) {
+        throw new Error("上传服务未返回有效的文件编号，请重试");
+      }
+      const fileId = uploaded.file_id.trim();
       setForm((prev) => ({
         ...prev,
         files: prev.files.map((item) =>
           item.localId === entry.localId
             ? {
                 ...item,
-                fileId: uploaded.file_id,
-                size: uploaded.size ?? item.size,
+                fileId,
+                size:
+                  typeof uploaded.size === "number"
+                    ? uploaded.size
+                    : item.size,
                 status: "done",
                 message: undefined,
               }
@@ -677,9 +1369,11 @@ export default function ApplyPage() {
     }));
     if (notices.length) setUploadNotice(notices[0]);
 
-    for (const item of queued) {
-      if (item.file) await uploadOne(item.entry, item.file);
-    }
+    await Promise.allSettled(
+      queued.map((item) =>
+        item.file ? uploadOne(item.entry, item.file) : Promise.resolve(),
+      ),
+    );
   }
 
   async function retryUpload(localId: string) {
@@ -703,6 +1397,7 @@ export default function ApplyPage() {
       files: prev.files.filter((item) => item.localId !== localId),
     }));
     setUploadNotice(null);
+    clearError("uploads");
   }
 
   function clearDraft() {
@@ -723,20 +1418,12 @@ export default function ApplyPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  const structureValues = STRUCTURE_FIELDS.map((field) =>
-    Number.parseInt(form.structure[field.key] || "0", 10),
-  );
-  const structureTouched = STRUCTURE_FIELDS.some(
-    (field) => form.structure[field.key] !== "",
-  );
-  const structureTotal = structureValues.reduce(
-    (sum, value) => sum + (Number.isFinite(value) ? value : 0),
-    0,
-  );
-  const structureIsValid =
-    !structureTouched ||
-    structureValues.every((value) => value === 0) ||
-    structureTotal === 100;
+  const {
+    values: structureValues,
+    touched: structureTouched,
+    total: structureTotal,
+    valid: structureIsValid,
+  } = structureState(form);
   const filledItems = form.items.filter((item) => item.name.trim());
   const uploadedFiles = form.files.filter(
     (file) => file.status === "done" && file.fileId,
@@ -755,6 +1442,12 @@ export default function ApplyPage() {
   );
   const brandComplete = Boolean(form.brand_name.trim()) && contactsComplete;
   const categoriesComplete = form.categories.length > 0 && form.zones.length > 0;
+  const surveyQuestions = schemaQuestions(schema);
+  const profileComplete = surveyQuestions
+    .filter((question) => question.required)
+    .every((question) =>
+      questionAnswered(question, form.answers[question.key]),
+    );
   const priceText =
     form.price_min || form.price_max
       ? `${form.price_min || "0"}—${form.price_max || "不限"} 元`
@@ -768,47 +1461,64 @@ export default function ApplyPage() {
     )
     .join(" / ");
 
-  const formComplete = [brandComplete, categoriesComplete, true, true, form.consent];
+  const sectionComplete = [
+    brandComplete,
+    categoriesComplete,
+    false,
+    profileComplete,
+    false,
+    form.consent,
+  ];
 
-  function validate(): Errors {
+  function validate(currentForm = form): Errors {
     const next: Errors = {};
-    if (!form.brand_name.trim()) next.brand_name = "请填写品牌或店铺名称";
-    else if (form.brand_name.trim().length > 120)
+    const structure = structureState(currentForm);
+    if (!currentForm.brand_name.trim()) next.brand_name = "请填写品牌或店铺名称";
+    else if (currentForm.brand_name.trim().length > 120)
       next.brand_name = "品牌名称不能超过 120 字";
 
-    if (!form.contact_name.trim()) next.contact_name = "请填写联系人姓名";
-    else if (form.contact_name.trim().length > 60)
+    if (!currentForm.contact_name.trim()) next.contact_name = "请填写联系人姓名";
+    else if (currentForm.contact_name.trim().length > 60)
       next.contact_name = "联系人姓名不能超过 60 字";
 
-    if (!form.phone.trim()) next.phone = "请填写手机号码";
-    else if (!PHONE_RE.test(normalizePhone(form.phone)))
+    if (!currentForm.phone.trim()) next.phone = "请填写手机号码";
+    else if (!PHONE_RE.test(normalizePhone(currentForm.phone)))
       next.phone = "请填写有效的 11 位手机号";
 
-    if (!form.wechat.trim() && !form.email.trim())
+    if (!currentForm.wechat.trim() && !currentForm.email.trim())
       next.contact = "微信与邮箱至少填写一项，用于发送合同与后续联络";
-    if (form.email.trim() && !EMAIL_RE.test(form.email.trim()))
+    if (currentForm.email.trim() && !EMAIL_RE.test(currentForm.email.trim()))
       next.email = "邮箱格式不正确";
-    if (form.email.trim().length > 120) next.email = "邮箱不能超过 120 字";
-    if (form.wechat.trim().length > 60) next.wechat = "微信不能超过 60 字";
-    if (form.city.trim().length > 60) next.city = "城市不能超过 60 字";
+    if (currentForm.email.trim().length > 120)
+      next.email = "邮箱不能超过 120 字";
+    if (currentForm.wechat.trim().length > 60)
+      next.wechat = "微信不能超过 60 字";
+    if (currentForm.city.trim().length > 60)
+      next.city = "城市不能超过 60 字";
 
-    if (!form.categories.length)
+    if (!currentForm.categories.length)
       next.categories = "请至少选择一个经营品类";
-    if (!form.zones.length) next.zones = "请至少选择一个意向区域";
+    if (!currentForm.zones.length) next.zones = "请至少选择一个意向区域";
 
-    if (form.price_min && form.price_max) {
-      const min = Number.parseInt(form.price_min, 10);
-      const max = Number.parseInt(form.price_max, 10);
+    if (currentForm.price_min && currentForm.price_max) {
+      const min = Number.parseInt(currentForm.price_min, 10);
+      const max = Number.parseInt(currentForm.price_max, 10);
       if (max < min) next.price_max = "价格上限不能小于下限";
     }
-
-    if (structureTouched && structureValues.every((value) => value === 0)) {
-      // 全为 0 视为未填写，不提交商品结构。
-    } else if (structureTouched && structureTotal !== 100) {
-      next.structure = `商品结构四项合计须为 100%，当前 ${structureTotal}%`;
+    if (
+      currentForm.expected_qty &&
+      Number.parseInt(currentForm.expected_qty, 10) > 1_000_000
+    ) {
+      next.expected_qty = "预计带货数量不能超过 1,000,000 件";
     }
 
-    form.items.forEach((item, index) => {
+    if (structure.touched && structure.values.every((value) => value === 0)) {
+      // 全为 0 视为未填写，不提交商品结构。
+    } else if (structure.touched && structure.total !== 100) {
+      next.structure = `商品结构四项合计须为 100%，当前 ${structure.total}%`;
+    }
+
+    currentForm.items.forEach((item, index) => {
       const hasOtherValue = Boolean(
         item.era_series.trim() || item.condition_source.trim() || item.price,
       );
@@ -818,16 +1528,133 @@ export default function ApplyPage() {
       if (item.name.trim().length > 120)
         next[`items[${index}].name`] = "商品名称不能超过 120 字";
       if (item.era_series.trim().length > 200)
-        next[`items[${index}].name`] = "年代 / 系列说明不能超过 200 字";
+        next[`items[${index}].era_series`] =
+          "年代 / 系列说明不能超过 200 字";
       if (item.condition_source.trim().length > 200)
-        next[`items[${index}].name`] = "状态及来源不能超过 200 字";
+        next[`items[${index}].condition_source`] =
+          "状态及来源不能超过 200 字";
       if (item.price && Number.parseInt(item.price, 10) > 100_000_000)
         next[`items[${index}].price`] = "拟售价超出可填写范围";
     });
 
+    // H5 v2 上线后按题目 required 做前置校验；服务端 enforced 只决定接口是否再次拒绝缺项。
+    surveyQuestions.forEach((question) => {
+      const value = currentForm.answers[question.key];
+      if (question.type === "bool") {
+        if (question.required && typeof value !== "boolean") {
+          next[question.key] = `请选择「${question.label}」`;
+        }
+        return;
+      }
+
+      if (question.type === "multi") {
+        const selected = uniqueStrings(answerAsStrings(value));
+        const available = new Set(
+          (question.options ?? []).map((option) => String(option.value)),
+        );
+        if (question.required && !selected.length) {
+          next[question.key] = `请选择「${question.label}」`;
+        } else if (
+          selected.length &&
+          question.min_items &&
+          selected.length < question.min_items
+        ) {
+          next[question.key] =
+            `${question.label}至少选择 ${question.min_items} 项`;
+        } else if (question.max_items && selected.length > question.max_items) {
+          next[question.key] =
+            `${question.label}最多选择 ${question.max_items} 项`;
+        } else if (selected.some((item) => !available.has(item))) {
+          next[question.key] = `「${question.label}」选项已更新，请重新选择`;
+        }
+        if (
+          question.key === "planned_activities" &&
+          selected.includes("none") &&
+          selected.length > 1
+        ) {
+          next[question.key] = "「没有特别安排」不能与其他选项同时选择";
+        }
+        return;
+      }
+
+      if (question.type === "url_list") {
+        const links = uniqueStrings(answerAsStrings(value));
+        if (question.required && !links.length) {
+          next[question.key] = `请填写「${question.label}」`;
+        } else if (
+          links.length &&
+          question.min_items &&
+          links.length < question.min_items
+        ) {
+          next[question.key] =
+            `${question.label}至少填写 ${question.min_items} 条`;
+        } else if (question.max_items && links.length > question.max_items) {
+          next[question.key] =
+            `${question.label}最多填写 ${question.max_items} 条`;
+        } else {
+          const invalid = links.find((link) => !isHttpUrl(link));
+          if (invalid) {
+            next[question.key] =
+              `链接需以 http:// 或 https:// 开头：${invalid.slice(0, 40)}`;
+          }
+        }
+        return;
+      }
+
+      const text = answerAsString(value).trim();
+      if (question.type === "year") {
+        if (!text) {
+          if (question.required) {
+            next[question.key] = `请填写「${question.label}」`;
+          }
+          return;
+        }
+        const year = Number(text);
+        const min = question.min ?? 1900;
+        const max = question.max ?? 2100;
+        if (!/^\d{4}$/.test(text) || year < min || year > max) {
+          next[question.key] =
+            `${question.label}需为 ${min}–${max} 的四位年份`;
+        }
+        return;
+      }
+
+      if (question.type === "textarea") {
+        if (!text) {
+          if (question.required) {
+            next[question.key] = `请填写「${question.label}」`;
+          }
+          return;
+        }
+        const length = textLength(text);
+        const min = question.min_length ?? 0;
+        const max = question.max_length;
+        if (min && length < min) {
+          next[question.key] =
+            `${question.label}需 ${min}–${max ?? "不限"} 字，当前 ${length} 字`;
+        } else if (max && length > max) {
+          next[question.key] =
+            `${question.label}不能超过 ${max} 字，当前 ${length} 字`;
+        }
+        return;
+      }
+
+      if (question.type === "single" && question.required && !text) {
+        next[question.key] = `请选择「${question.label}」`;
+      } else if (
+        question.type === "single" &&
+        text &&
+        !(question.options ?? []).some(
+          (option) => typeof option.value === "string" && option.value === text,
+        )
+      ) {
+        next[question.key] = `「${question.label}」选项已更新，请重新选择`;
+      }
+    });
+
     if (uploadingCount) next.uploads = "附件仍在上传，请稍候再提交";
     else if (failedUploads) next.uploads = "有附件上传失败，请重试或移除";
-    if (!form.consent) next.consent = "请勾选确认后提交";
+    if (!currentForm.consent) next.consent = "请勾选确认后提交";
 
     return next;
   }
@@ -840,37 +1667,37 @@ export default function ApplyPage() {
         setGeneralError(field.message);
         continue;
       }
-      next[path === "file_ids" ? "uploads" : path] = field.message;
+      const target = /^items\[/.test(path) ? path : path.split(/[.\[]/, 1)[0];
+      next[target === "file_ids" ? "uploads" : target] = field.message;
     }
     setErrors((prev) => ({ ...prev, ...next }));
   }
 
-  function buildPayload() {
-    const structureFilled =
-      structureTouched && !structureValues.every((value) => value === 0);
+  function buildPayload(currentForm = form) {
+    const structure = structureState(currentForm);
     return {
-      brand_name: form.brand_name.trim(),
-      contact_name: form.contact_name.trim(),
-      phone: normalizePhone(form.phone),
-      wechat: form.wechat.trim() || null,
-      email: form.email.trim() || null,
-      city: form.city.trim() || null,
-      entity_type: form.entity_type || null,
-      is_first_time: form.is_first_time,
-      categories: form.categories,
-      zones: form.zones,
-      expected_qty: toIntOrNull(form.expected_qty),
-      price_min: toIntOrNull(form.price_min),
-      price_max: toIntOrNull(form.price_max),
-      structure: structureFilled
+      brand_name: currentForm.brand_name.trim(),
+      contact_name: currentForm.contact_name.trim(),
+      phone: normalizePhone(currentForm.phone),
+      wechat: currentForm.wechat.trim() || null,
+      email: currentForm.email.trim() || null,
+      city: currentForm.city.trim() || null,
+      entity_type: currentForm.entity_type || null,
+      is_first_time: currentForm.is_first_time,
+      categories: currentForm.categories,
+      zones: currentForm.zones,
+      expected_qty: toIntOrNull(currentForm.expected_qty),
+      price_min: toIntOrNull(currentForm.price_min),
+      price_max: toIntOrNull(currentForm.price_max),
+      structure: structure.filled
         ? {
-            secondhand: structureValues[0],
-            new_stock: structureValues[1],
-            sample: structureValues[2],
-            replica: structureValues[3],
+            secondhand: structure.values[0],
+            new_stock: structure.values[1],
+            sample: structure.values[2],
+            replica: structure.values[3],
           }
         : null,
-      items: form.items
+      items: currentForm.items
         .filter((item) => item.name.trim())
         .map((item) => ({
           name: item.name.trim(),
@@ -878,7 +1705,11 @@ export default function ApplyPage() {
           condition_source: item.condition_source.trim() || null,
           price: toIntOrNull(item.price),
         })),
-      file_ids: uploadedFiles.map((file) => file.fileId),
+      ...buildSurveyPayload(schema, currentForm.answers),
+      file_ids: currentForm.files
+        .flatMap((file) =>
+          file.status === "done" && file.fileId ? [file.fileId] : [],
+        ),
       consent: true,
       source: "h5",
     };
@@ -902,7 +1733,9 @@ export default function ApplyPage() {
       return;
     }
     setGeneralError(null);
-    const nextErrors = validate();
+    const preparedForm = normalizeFormAnswers(form, schema);
+    setForm(preparedForm);
+    const nextErrors = validate(preparedForm);
     if (Object.keys(nextErrors).length) {
       setErrors(nextErrors);
       focusSummary();
@@ -930,7 +1763,7 @@ export default function ApplyPage() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(buildPayload()),
+          body: JSON.stringify(buildPayload(preparedForm)),
         },
         SUBMIT_TIMEOUT_MS,
         "报名服务响应超时",
@@ -993,6 +1826,225 @@ export default function ApplyPage() {
 
   const errorEntries = Object.entries(errors);
 
+  function renderSurveyQuestion(question: SchemaQuestion) {
+    const value = form.answers[question.key];
+    const error = errors[question.key];
+    const labelId = `${question.key}-label`;
+    const helpId = question.help ? `${question.key}-help` : undefined;
+    const fullWidth =
+      question.type === "url_list" ||
+      question.type === "textarea" ||
+      question.type === "multi" ||
+      question.type === "single";
+    const className = `field ${fullWidth ? "field--full" : ""} ${
+      error ? "has-error" : ""
+    }`;
+
+    if (question.type === "year") {
+      return (
+        <div className={className} key={question.key}>
+          <label className="field__label" htmlFor={question.key}>
+            <span>
+              {question.label}{" "}
+              {question.required && <span className="field__required">*</span>}
+            </span>
+          </label>
+          <input
+            className={`apply-input ${error ? "is-invalid" : ""}`}
+            id={question.key}
+            name={question.key}
+            inputMode="numeric"
+            maxLength={4}
+            value={answerAsString(value)}
+            placeholder="2018"
+            aria-invalid={Boolean(error)}
+            aria-describedby={helpId}
+            onChange={(event) =>
+              updateAnswer(
+                question.key,
+                event.target.value.replace(/\D/g, "").slice(0, 4),
+              )
+            }
+          />
+          {question.help && (
+            <p className="field__hint" id={helpId}>
+              {question.help}
+            </p>
+          )}
+          {error && <p className="field__error">{error}</p>}
+        </div>
+      );
+    }
+
+    if (question.type === "textarea") {
+      const text = answerAsString(value);
+      const count = textLength(text);
+      return (
+        <div className={className} key={question.key}>
+          <label className="field__label" htmlFor={question.key}>
+            <span>
+              {question.label}{" "}
+              {question.required && <span className="field__required">*</span>}
+            </span>
+          </label>
+          <textarea
+            className={`apply-textarea ${error ? "is-invalid" : ""}`}
+            id={question.key}
+            name={question.key}
+            value={text}
+            maxLength={question.max_length}
+            aria-invalid={Boolean(error)}
+            aria-describedby={helpId}
+            placeholder={question.placeholder ?? "请输入"}
+            onChange={(event) =>
+              updateAnswer(question.key, event.target.value)
+            }
+          />
+          <div className="field__meta">
+            <p className="field__hint" id={helpId}>
+              {question.help}
+            </p>
+            <span
+              className={`char-count ${
+                text && question.min_length && count < question.min_length
+                  ? "is-below"
+                  : ""
+              }`}
+            >
+              {count}
+              {question.max_length ? ` / ${question.max_length}` : ""} 字
+            </span>
+          </div>
+          {error && <p className="field__error">{error}</p>}
+        </div>
+      );
+    }
+
+    if (question.type === "url_list") {
+      const links = answerAsStrings(value);
+      const visibleLinks = links.length ? links : [""];
+      const maxItems = question.max_items ?? 5;
+      return (
+        <div className={className} key={question.key}>
+          <p className="field__label" id={labelId}>
+            <span>
+              {question.label}{" "}
+              {question.required && <span className="field__required">*</span>}
+            </span>
+            <span className="field__hint">
+              {visibleLinks.length} / {maxItems}
+            </span>
+          </p>
+          <div className="url-list">
+            {visibleLinks.map((link, index) => (
+              <div className="url-row" key={`${question.key}-${index}`}>
+                <input
+                  className={`apply-input ${error ? "is-invalid" : ""}`}
+                  id={index === 0 ? question.key : `${question.key}-${index}`}
+                  name={question.key}
+                  type="url"
+                  inputMode="url"
+                  autoComplete="url"
+                  value={link}
+                  aria-label={`${question.label} ${index + 1}`}
+                  aria-invalid={Boolean(error)}
+                  aria-describedby={helpId}
+                  placeholder={question.placeholder ?? "https://..."}
+                  onChange={(event) =>
+                    updateLink(question, index, event.target.value)
+                  }
+                  onBlur={() => normalizeLink(question, index)}
+                />
+                <button
+                  className="url-row__remove"
+                  type="button"
+                  aria-label={`删除第 ${index + 1} 个链接`}
+                  disabled={visibleLinks.length === 1}
+                  onClick={() => removeLink(question, index)}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="field__meta">
+            <p className="field__hint" id={helpId}>
+              {question.help}
+            </p>
+            <button
+              className="text-button"
+              type="button"
+              disabled={visibleLinks.length >= maxItems}
+              onClick={() => addLink(question)}
+            >
+              + 添加链接
+            </button>
+          </div>
+          {error && <p className="field__error">{error}</p>}
+        </div>
+      );
+    }
+
+    const options = question.options ?? [];
+    const isMulti = question.type === "multi";
+    const stack =
+      question.type === "single" && question.key === "willing_to_promote";
+    return (
+      <div className={className} id={question.key} key={question.key}>
+        <p className="field__label" id={labelId}>
+          <span>
+            {question.label}{" "}
+            {question.required && <span className="field__required">*</span>}
+          </span>
+        </p>
+        <div
+          className={`choice-list ${stack ? "choice-list--stack" : ""}`}
+          role={isMulti ? "group" : "radiogroup"}
+          aria-labelledby={labelId}
+          aria-describedby={helpId}
+        >
+          {options.map((option) => {
+            const checked = isMulti
+              ? answerAsStrings(value).includes(String(option.value))
+              : typeof option.value === "boolean"
+                ? answerAsBool(value) === option.value
+                : answerAsString(value) === option.value;
+            return (
+              <label
+                className={`choice-option ${checked ? "is-checked" : ""}`}
+                key={`${question.key}-${String(option.value)}`}
+              >
+                <input
+                  id={`${question.key}-${String(option.value)}`}
+                  type={isMulti ? "checkbox" : "radio"}
+                  name={question.key}
+                  value={String(option.value)}
+                  checked={checked}
+                  onChange={() => toggleAnswerOption(question, option.value)}
+                />
+                <span
+                  className={`choice-option__mark ${
+                    isMulti ? "is-square" : ""
+                  }`}
+                  aria-hidden="true"
+                >
+                  {isMulti && checked ? "✓" : ""}
+                </span>
+                <span>{option.label}</span>
+              </label>
+            );
+          })}
+        </div>
+        {question.help && (
+          <p className="field__hint" id={helpId}>
+            {question.help}
+          </p>
+        )}
+        {error && <p className="field__error">{error}</p>}
+      </div>
+    );
+  }
+
   return (
     <div
       className={`apply-page ${
@@ -1019,13 +2071,13 @@ export default function ApplyPage() {
                 请填写品牌信息、经营经验、本次拟带展内容及支持需求，便于主办方判断区域适配与合作安排。
               </p>
               <p className="apply-hero__note">
-                线上表用于结构化登记；品牌故事、过往参展、展位与协助需求等补充材料，可在提交后发送至{" "}
+                线上表用于结构化登记；商品明细、店铺与陈列照片、展位与协助需求等补充材料，可在提交后发送至{" "}
                 {CONTACT_EMAIL}，或下载 Word 完整表填写。
               </p>
               <p className="apply-hero__compact">
                 2026.12.25—27 / 深圳华侨城创意文化园
                 <br />
-                完整资料 48 小时内反馈
+                分轮截止 / 统一回复
               </p>
             </div>
             <dl className="apply-hero__meta">
@@ -1039,7 +2091,7 @@ export default function ApplyPage() {
               </div>
               <div>
                 <dt>FEEDBACK</dt>
-                <dd>完整资料 48 小时内反馈</dd>
+                <dd>分轮评审 / 统一回复</dd>
               </div>
             </dl>
           </div>
@@ -1070,7 +2122,7 @@ export default function ApplyPage() {
             <p className="apply-success__lead">
               {result.preview
                 ? "当前为商家参展申请页的样式预览。填写内容仅保留在本地浏览器，没有上传附件或提交报名数据。"
-                : "感谢提交。主办方会核对品牌、货盘与区域意向，收到完整资料后将在 48 小时内发送参展合作协议，或反馈审核与补充资料需求。"}
+                : `感谢提交。主办方会核对品牌、货盘与区域意向。${schema.feedback}`}
             </p>
             <dl className="apply-success__meta">
               <div>
@@ -1097,7 +2149,7 @@ export default function ApplyPage() {
                   </>
                 ) : (
                   <>
-                    可补充品牌简介、5–10 张代表商品图、店铺或陈列照片、商品明细与年代 / 来源说明，
+                    可补充 5–10 张代表商品图、店铺或陈列照片、商品明细与年代 / 来源说明，
                     发送至 <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>。
                     未回复不视为录取；最终商品、区域、费用和服务以双方签署文件为准。
                   </>
@@ -1126,6 +2178,10 @@ export default function ApplyPage() {
                   <p>表单可正常填写与校验，附件和报名数据暂不会上传至报名系统。</p>
                 </div>
               )}
+
+              <p className="form-required-hint">
+                <span aria-hidden="true">*</span> {schema.requiredHint}
+              </p>
 
               {(errorEntries.length > 0 || generalError) && (
                 <div
@@ -1394,7 +2450,7 @@ export default function ApplyPage() {
                       <span className="field__hint">可多选</span>
                     </p>
                     <div className="zone-grid">
-                      {ZONES.map((zone) => (
+                      {schema.zones.map((zone) => (
                         <label className="zone-option" key={zone.value}>
                           <input
                             type="checkbox"
@@ -1406,24 +2462,13 @@ export default function ApplyPage() {
                             {zone.value}
                           </span>
                           <span className="zone-option__title">
-                            {zone.value} 区 · {zone.title}
+                            {zone.title.startsWith(`${zone.value} 区`)
+                              ? zone.title
+                              : `${zone.value} 区 · ${zone.title}`}
                           </span>
                           <span className="zone-option__desc">{zone.desc}</span>
                         </label>
                       ))}
-                      <div className="zone-option zone-option--off">
-                        <span className="zone-option__letter" aria-hidden="true">D</span>
-                        <span className="zone-option__title">D 区 · Living、餐饮酒水等</span>
-                        <span className="zone-option__desc">
-                          器皿、手帐、周边、香氛或餐饮酒水另行签约，不在线上表单范围内。
-                          <a
-                            className="zone-option__off"
-                            href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("66th D 区合作咨询")}`}
-                          >
-                            邮件咨询 D 区 <ArrowIcon />
-                          </a>
-                        </span>
-                      </div>
                     </div>
                     {errors.zones && <p className="field__error">{errors.zones}</p>}
                   </div>
@@ -1457,12 +2502,17 @@ export default function ApplyPage() {
                         inputMode="numeric"
                         value={form.expected_qty}
                         placeholder="0"
-                        onChange={(event) =>
-                          update("expected_qty", toDigits(event.target.value, 7))
-                        }
+                        aria-invalid={Boolean(errors.expected_qty)}
+                        onChange={(event) => {
+                          update("expected_qty", toDigits(event.target.value, 7));
+                          clearError("expected_qty");
+                        }}
                       />
                       <span className="input-unit__unit">件</span>
                     </span>
+                    {errors.expected_qty && (
+                      <p className="field__error">{errors.expected_qty}</p>
+                    )}
                   </div>
 
                   <div className="field">
@@ -1586,7 +2636,12 @@ export default function ApplyPage() {
                       {form.items.map((item, index) => (
                         <div className="item-row" key={item.key}>
                           <span className="item-row__index">商品 {String(index + 1).padStart(2, "0")}</span>
-                          <label className="field" htmlFor={`item-${index}-name`}>
+                          <label
+                            className={`field ${
+                              errors[`items[${index}].name`] ? "has-error" : ""
+                            }`}
+                            htmlFor={`item-${index}-name`}
+                          >
                             <span className="field__label">商品及品牌</span>
                             <input
                               className="apply-input"
@@ -1594,6 +2649,9 @@ export default function ApplyPage() {
                               value={item.name}
                               maxLength={120}
                               placeholder="例如：Hermès Birkin 30 金棕"
+                              aria-invalid={Boolean(
+                                errors[`items[${index}].name`],
+                              )}
                               onChange={(event) =>
                                 updateItem(index, "name", event.target.value)
                               }
@@ -1604,7 +2662,14 @@ export default function ApplyPage() {
                               </span>
                             )}
                           </label>
-                          <label className="field" htmlFor={`item-${index}-era`}>
+                          <label
+                            className={`field ${
+                              errors[`items[${index}].era_series`]
+                                ? "has-error"
+                                : ""
+                            }`}
+                            htmlFor={`item-${index}-era`}
+                          >
                             <span className="field__label">年代 / 系列或库存属性</span>
                             <input
                               className="apply-input"
@@ -1612,12 +2677,27 @@ export default function ApplyPage() {
                               value={item.era_series}
                               maxLength={200}
                               placeholder="2015 年 / Birkin"
+                              aria-invalid={Boolean(
+                                errors[`items[${index}].era_series`],
+                              )}
                               onChange={(event) =>
                                 updateItem(index, "era_series", event.target.value)
                               }
                             />
+                            {errors[`items[${index}].era_series`] && (
+                              <span className="field__error">
+                                {errors[`items[${index}].era_series`]}
+                              </span>
+                            )}
                           </label>
-                          <label className="field" htmlFor={`item-${index}-condition`}>
+                          <label
+                            className={`field ${
+                              errors[`items[${index}].condition_source`]
+                                ? "has-error"
+                                : ""
+                            }`}
+                            htmlFor={`item-${index}-condition`}
+                          >
                             <span className="field__label">状态及来源</span>
                             <input
                               className="apply-input"
@@ -1625,12 +2705,25 @@ export default function ApplyPage() {
                               value={item.condition_source}
                               maxLength={200}
                               placeholder="二手 / 附购买凭证"
+                              aria-invalid={Boolean(
+                                errors[`items[${index}].condition_source`],
+                              )}
                               onChange={(event) =>
                                 updateItem(index, "condition_source", event.target.value)
                               }
                             />
+                            {errors[`items[${index}].condition_source`] && (
+                              <span className="field__error">
+                                {errors[`items[${index}].condition_source`]}
+                              </span>
+                            )}
                           </label>
-                          <label className="field" htmlFor={`item-${index}-price`}>
+                          <label
+                            className={`field ${
+                              errors[`items[${index}].price`] ? "has-error" : ""
+                            }`}
+                            htmlFor={`item-${index}-price`}
+                          >
                             <span className="field__label">拟售价</span>
                             <span className="input-unit">
                               <input
@@ -1639,6 +2732,9 @@ export default function ApplyPage() {
                                 inputMode="numeric"
                                 value={item.price}
                                 placeholder="0"
+                                aria-invalid={Boolean(
+                                  errors[`items[${index}].price`],
+                                )}
                                 onChange={(event) =>
                                   updateItem(index, "price", toDigits(event.target.value, 9))
                                 }
@@ -1676,8 +2772,37 @@ export default function ApplyPage() {
                         A 区请重点说明年份 / 系列 / 来源；C 区请注明新品、二手或瑕疵属性。
                       </p>
                     </div>
+                    <p className="items__hint">{schema.itemsHint}</p>
                     {errors.items && <p className="field__error">{errors.items}</p>}
                   </div>
+                </div>
+              </section>
+
+              <section
+                className="form-section"
+                id="profile"
+                aria-labelledby="profile-title"
+              >
+                <div className="form-section__head">
+                  <span className="form-section__num">04</span>
+                  <h2 id="profile-title">品牌背景与经营情况</h2>
+                  <p className="form-section__label">
+                    BRAND BACKGROUND &amp; OPERATIONS
+                  </p>
+                  <p className="form-section__intro">
+                    用于了解品牌定位、经营经历与活动合作意愿。 {schema.requiredHint}
+                  </p>
+                </div>
+
+                <div className="profile-groups">
+                  {schema.groups.map((group) => (
+                    <div className="profile-group" key={group.title}>
+                      <h3>{group.title}</h3>
+                      <div className="field-grid">
+                        {group.questions.map(renderSurveyQuestion)}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </section>
 
@@ -1687,11 +2812,11 @@ export default function ApplyPage() {
                 aria-labelledby="attachments-title"
               >
                 <div className="form-section__head">
-                  <span className="form-section__num">04</span>
+                  <span className="form-section__num">05</span>
                   <h2 id="attachments-title">资料与附件</h2>
                   <p className="form-section__label">DOCUMENTS &amp; PHOTOS</p>
                   <p className="form-section__intro">
-                    建议将品牌简介、代表商品图、商品明细与说明整理为一个 ZIP
+                    建议将代表商品图、商品明细与来源说明整理为一个 ZIP
                     包上传，便于主办方集中审核。
                   </p>
                 </div>
@@ -1834,11 +2959,11 @@ export default function ApplyPage() {
 
               <section className="form-section" id="confirm" aria-labelledby="confirm-title">
                 <div className="form-section__head">
-                  <span className="form-section__num">05</span>
+                  <span className="form-section__num">06</span>
                   <h2 id="confirm-title">确认提交</h2>
                   <p className="form-section__label">REVIEW &amp; CONSENT</p>
                   <p className="form-section__intro">
-                    请核对关键信息。提交后，主办方将在 48 小时内反馈审核结果或补充资料需求。
+                    请核对关键信息，并确认提交前已阅读报名与资料使用说明。
                   </p>
                 </div>
 
@@ -1885,6 +3010,15 @@ export default function ApplyPage() {
                     <span className="review__label">代表商品</span>
                     <span>{filledItems.length ? `${filledItems.length} 件` : "未填写"}</span>
                     <a className="review__edit" href="#inventory">修改</a>
+                  </div>
+                  <div className="review__row">
+                    <span className="review__label">品牌背景</span>
+                    <span>
+                      {answerAsString(form.answers.founded_year)
+                        ? `${answerAsString(form.answers.founded_year)} 年成立`
+                        : "未填写"}
+                    </span>
+                    <a className="review__edit" href="#profile">修改</a>
                   </div>
                   <div className="review__row">
                     <span className="review__label">附件</span>
@@ -1965,6 +3099,7 @@ export default function ApplyPage() {
                       清空本机草稿
                     </button>
                   </div>
+                  <p className="submit-panel__feedback">{schema.feedback}</p>
                   <p className="submit-panel__patience">
                     {APPLICATION_API_ENABLED
                       ? "提交后请耐心等待，通常需要 10–60 秒；请勿重复点击或关闭页面。"
@@ -1991,13 +3126,7 @@ export default function ApplyPage() {
                     <span>
                       {section.num} / {section.title}
                     </span>
-                    {index < 2 && formComplete[index] ? (
-                      <span className="aside-nav__state is-done" aria-label="已完成">
-                        ✓
-                      </span>
-                    ) : index < 2 ? (
-                      <span className="aside-nav__state" aria-hidden="true" />
-                    ) : index === 4 && form.consent ? (
+                    {sectionComplete[index] ? (
                       <span className="aside-nav__state is-done" aria-label="已完成">
                         ✓
                       </span>
@@ -2013,7 +3142,7 @@ export default function ApplyPage() {
                 <dl className="aside-block__list">
                   <div>
                     <dt>区域</dt>
-                    <dd>A / B / C 区可多选，D 区另行签约</dd>
+                    <dd>A / B / C / D 区可多选，最终以主办方审核确认为准</dd>
                   </div>
                   <div>
                     <dt>附件</dt>
@@ -2023,7 +3152,7 @@ export default function ApplyPage() {
                   </div>
                   <div>
                     <dt>反馈</dt>
-                    <dd>完整资料 48 小时内，未回复不视为录取</dd>
+                    <dd>{schema.feedback}</dd>
                   </div>
                   <div>
                     <dt>费用</dt>
@@ -2035,7 +3164,7 @@ export default function ApplyPage() {
               <div className="aside-note">
                 <strong>补充资料</strong>
                 <p>
-                  品牌故事、过往参展经历、展位与协助需求等定性内容，可在提交后发送至主办方，
+                  商品明细、店铺与陈列照片、展位与协助需求等补充材料，可在提交后发送至主办方，
                   或下载 Word 完整表填写。
                 </p>
                 <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("66th 商家参展申请补充资料")}`}>

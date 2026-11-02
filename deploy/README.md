@@ -78,6 +78,10 @@ Run workflow。它只做两件事：构建，然后把 `dist/` 覆盖到
 `REVISION`。此时访问 `http://ECS_IP/` 就能看到完整页面，表单和上传都能在
 这一步先验一遍。
 
+CI 在 rsync 前会运行 `npm run verify:dist`，实际起一个本地静态服务器，检查
+`/`、`app.html`、`apply.html`、它们引用的 JS/CSS/字体，以及报名接口字符串。
+资源缺失会在发布前直接失败。
+
 ## 六、宝塔里开 HTTPS
 
 站点设置 → SSL → Let's Encrypt → 申请 → 打开**强制 HTTPS**。
@@ -108,5 +112,7 @@ curl -s  https://66thandsecondlovehealgiveus.com/REVISION
 
 - 服务器需要有 `rsync`，宝塔机器一般自带；没有的话 `apt install rsync`。
 - 根目录填 `/verifly/activity-66-portal`，别填成 `/verifly`，那样会读到上层目录，首页 404。
+- 当前发布直接覆盖站点目录，不是目录级原子切换。`--delay-updates` 只缩短新旧
+  文件并存的窗口；如果以后要求零中断，需要改成版本目录加原子软链。
 - 切换完成后去仓库 Settings → Pages 把这个自定义域名解绑，不然 GitHub 那边
   还会一直尝试给这个域名发证书。
