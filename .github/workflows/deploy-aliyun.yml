@@ -39,6 +39,7 @@ jobs:
           npm run build
           test -f dist/app.html
           test -f dist/apply.html
+          test -f dist/faq.html
           test -n "$(find dist/assets -maxdepth 1 -name '*.js' -print -quit)"
           cp dist/app.html dist/index.html
           printf '%s\n' "$GITHUB_SHA" > dist/REVISION
@@ -87,12 +88,12 @@ jobs:
         run: |
           set -euo pipefail
           base="${PUBLIC_URL%/}"
-          for path in / /app.html /apply.html; do
+          for path in / /app.html /apply.html /faq.html; do
             code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$base$path" || echo 000)"
             [ "$code" = "200" ] || { echo "FAIL $path -> $code"; exit 1; }
             echo "ok   $path"
           done
-          for page in "" /app.html /apply.html; do
+          for page in "" /app.html /apply.html /faq.html; do
             html="$(curl -fsS --max-time 20 "$base$page")"
             assets="$(
               printf '%s' "$html" \

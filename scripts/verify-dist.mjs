@@ -29,6 +29,7 @@ const requiredFiles = [
   "index.html",
   "app.html",
   "apply.html",
+  "faq.html",
   "favicon.png",
   "66th-merchant-application-form.docx",
   "REVISION",
@@ -129,7 +130,7 @@ async function fetchOk(pathname) {
 }
 
 try {
-  for (const page of ["/", "/app.html", "/apply.html"]) {
+  for (const page of ["/", "/app.html", "/apply.html", "/faq.html"]) {
     const response = await fetchOk(page);
     const html = await response.text();
     if (!html.includes('id="root"') || !html.includes("<script")) {

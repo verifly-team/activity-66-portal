@@ -145,6 +145,27 @@
   line-height: 1.8;
 }
 
+.apply-hero__faq-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 22px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--ink);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-decoration: none;
+  transition:
+    gap 160ms ease,
+    opacity 160ms ease;
+}
+
+.apply-hero__faq-link:hover {
+  gap: 17px;
+  opacity: 0.65;
+}
+
 .apply-hero__meta {
   display: none;
 }
@@ -1683,6 +1704,11 @@
   .apply-hero__lead {
     font-size: 18px;
     line-height: 1.75;
+  }
+
+  .apply-hero__faq-link {
+    margin-top: 24px;
+    font-size: 16px;
   }
 
   .apply-main {

@@ -121,3 +121,4 @@ await buildStandalone("app.html", "index.html");
 await buildStandalone("apply.html", "apply-standalone.html", {
   inlineDocx: true,
 });
+await buildStandalone("faq.html", "faq-standalone.html");

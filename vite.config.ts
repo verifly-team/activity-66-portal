@@ -17,6 +17,7 @@ export default defineConfig({
       input: {
         app: "app.html",
         apply: "apply.html",
+        faq: "faq.html",
       },
     },
   },

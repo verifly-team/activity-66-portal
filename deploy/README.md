@@ -74,12 +74,12 @@ Run workflow。它只做两件事：构建，然后把 `dist/` 覆盖到
 `/verifly/activity-66-portal`。静态文件不需要 reload nginx，nginx 每次
 请求都直接读磁盘。
 
-跑完目录里就是构建好的 `index.html`、`app.html`、`apply.html`、`assets/` 和
+跑完目录里就是构建好的 `index.html`、`app.html`、`apply.html`、`faq.html`、`assets/` 和
 `REVISION`。此时访问 `http://ECS_IP/` 就能看到完整页面，表单和上传都能在
 这一步先验一遍。
 
 CI 在 rsync 前会运行 `npm run verify:dist`，实际起一个本地静态服务器，检查
-`/`、`app.html`、`apply.html`、它们引用的 JS/CSS/字体，以及报名接口字符串。
+`/`、`app.html`、`apply.html`、`faq.html`、它们引用的 JS/CSS/字体，以及报名接口字符串。
 资源缺失会在发布前直接失败。
 
 ## 六、宝塔里开 HTTPS

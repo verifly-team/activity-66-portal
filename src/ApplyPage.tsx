@@ -8,6 +8,7 @@ const IS_STANDALONE_BUILD =
   typeof document !== "undefined" &&
   document.documentElement.dataset.standalone === "true";
 const HOME_HREF = IS_STANDALONE_BUILD ? "./index.html" : "./app.html";
+const FAQ_HREF = IS_STANDALONE_BUILD ? "./faq-standalone.html" : "./faq.html";
 
 const DEFAULT_API_BASE = "https://api.66thandsecondlovehealgiveus.com";
 const API_BASE = (import.meta.env.VITE_API_BASE ?? DEFAULT_API_BASE).replace(
@@ -2070,6 +2071,10 @@ export default function ApplyPage() {
               <p className="apply-hero__lead">
                 请填写品牌信息、经营经验、本次拟带展内容及支持需求，便于主办方判断区域适配与合作安排。
               </p>
+              <a className="apply-hero__faq-link" href={FAQ_HREF}>
+                <span>申请前你想知道的事</span>
+                <ArrowIcon className="arrow" />
+              </a>
               <p className="apply-hero__note">
                 线上表用于结构化登记；商品明细、店铺与陈列照片、展位与协助需求等补充材料，可在提交后发送至{" "}
                 {CONTACT_EMAIL}，或下载 Word 完整表填写。
