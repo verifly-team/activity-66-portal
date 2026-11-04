@@ -65,7 +65,7 @@ const ZONES = [
   },
   {
     value: "D",
-    title: "D 区（新增开放）",
+    title: "D 区·餐饮，手工艺原创与其他类目",
     desc: "本期新增开放网页报名；具体经营内容与陈列安排由主办方审核确认",
   },
 ] as const;
@@ -80,7 +80,8 @@ const STRUCTURE_FIELDS = [
   { key: "secondhand", label: "二手" },
   { key: "new_stock", label: "未使用库存" },
   { key: "sample", label: "样衣" },
-  { key: "replica", label: "复刻 / 原创" },
+  { key: "replica", label: "复刻" },
+  { key: "original", label: "原创 / 全新" },
 ] as const;
 
 const UPLOAD_KINDS = [
@@ -434,6 +435,7 @@ function createInitialForm(): FormState {
       new_stock: "",
       sample: "",
       replica: "",
+      original: "",
     },
     items: [createItem(), createItem(), createItem()],
     answers: createInitialAnswers(),
@@ -1516,7 +1518,7 @@ export default function ApplyPage() {
     if (structure.touched && structure.values.every((value) => value === 0)) {
       // 全为 0 视为未填写，不提交商品结构。
     } else if (structure.touched && structure.total !== 100) {
-      next.structure = `商品结构四项合计须为 100%，当前 ${structure.total}%`;
+      next.structure = `商品结构五项合计须为 100%，当前 ${structure.total}%`;
     }
 
     currentForm.items.forEach((item, index) => {
@@ -1695,7 +1697,8 @@ export default function ApplyPage() {
             secondhand: structure.values[0],
             new_stock: structure.values[1],
             sample: structure.values[2],
-            replica: structure.values[3],
+            // 线上接口目前仍按四项接收；待服务端升级后可拆回复刻与原创/全新。
+            replica: structure.values[3] + structure.values[4],
           }
         : null,
       items: currentForm.items
@@ -2600,7 +2603,7 @@ export default function ApplyPage() {
                       >
                         <span>
                           {!structureTouched
-                            ? "填写后四项合计须为 100%"
+                            ? "填写后五项合计须为 100%"
                             : structureValues.every((value) => value === 0)
                               ? "未填写时不提交商品结构"
                               : structureTotal === 100

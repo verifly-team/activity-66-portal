@@ -862,6 +862,10 @@
   background: var(--ink);
 }
 
+.structure__bar span:nth-child(5) {
+  background: #c77751;
+}
+
 .items {
   border-top: 1px solid var(--ink);
 }
@@ -1756,7 +1760,7 @@
   }
 
   .structure__fields {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
   .structure {
