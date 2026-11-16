@@ -307,6 +307,8 @@ const FAQ_SECTIONS: FaqSection[] = [
             <li>军品与工装</li>
             <li>首饰、杂志、设计档案、器皿、周边、香氛或餐饮酒水等</li>
             <li>二手名牌、过季清仓、Outlet 及样衣</li>
+            <li>原创服饰及首饰配件</li>
+            <li>工作坊手工艺人</li>
           </ul>
         ),
       },
@@ -401,20 +403,16 @@ const FAQ_SECTIONS: FaqSection[] = [
         answer: (
           <>
             <p>
-              有展览的区域 A、潮流的区域 B，也有 Outlet 的区域 C，收费不同。
+              有展览的区域 A，潮流的区域 B，Outlet 的区域 C，也有工作坊区域。
             </p>
             <dl className="faq-fee-list">
               <div>
-                <dt>A 区</dt>
-                <dd>￥3,000 / 3 天</dd>
+                <dt>A、B、C 区</dt>
+                <dd>统一收费标准 ￥666 / 3 天</dd>
               </div>
               <div>
-                <dt>B 区</dt>
-                <dd>￥666 / 3 天 + 营业额 15%</dd>
-              </div>
-              <div>
-                <dt>C 区</dt>
-                <dd>￥1,800 / 3 天 + 营业额 10%</dd>
+                <dt>工作坊</dt>
+                <dd>收费标准 ￥399 / 3 天</dd>
               </div>
             </dl>
           </>

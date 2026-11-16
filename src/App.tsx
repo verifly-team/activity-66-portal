@@ -138,15 +138,8 @@ function VendorList({
   return (
     <ul className={`vendor-list ${className}`.trim()}>
       {items.map((item) => (
-        <li className="vendor-item" key={item.name}>
+        <li className="vendor-item" key={item.name} aria-label={item.name}>
           <span className="vendor-swatch" aria-hidden="true" />
-          <span className="vendor-name">
-            {(item.lines ?? [item.name]).map((line) => (
-              <span className="vendor-name__line" key={line}>
-                {line}
-              </span>
-            ))}
-          </span>
         </li>
       ))}
     </ul>

@@ -56,7 +56,7 @@ const ZONES = [
   {
     value: "B",
     title: "工装与街头",
-    desc: "相关品牌的二手服饰",
+    desc: "相关品牌二手服饰，原创服饰与配件",
   },
   {
     value: "C",
@@ -65,8 +65,8 @@ const ZONES = [
   },
   {
     value: "D",
-    title: "D 区·餐饮，手工艺原创与其他类目",
-    desc: "本期新增开放网页报名；具体经营内容与陈列安排由主办方审核确认",
+    title: "手工艺与餐饮",
+    desc: "手工艺原创，工作坊与餐饮",
   },
 ] as const;
 
@@ -747,9 +747,10 @@ function normalizeSchema(value: unknown): FormSchema {
     zones.push({
       value,
       title:
-        typeof zone.label === "string" && zone.label.trim()
+        local?.title ??
+        (typeof zone.label === "string" && zone.label.trim()
           ? zone.label
-          : local?.title ?? value,
+          : value),
       desc: local?.desc,
     });
   }

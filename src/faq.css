@@ -502,7 +502,7 @@
 }
 
 .faq-fee-list > div {
-  grid-template-columns: 50px minmax(0, 1fr);
+  grid-template-columns: 90px minmax(0, 1fr);
 }
 
 .faq-end {

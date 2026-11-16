@@ -995,11 +995,6 @@ button.social-item__link {
   white-space: nowrap;
 }
 
-.vendor-name__line {
-  display: block;
-  white-space: nowrap;
-}
-
 .view-more {
   margin-top: 37px;
   padding: 0;
@@ -1741,7 +1736,7 @@ button.social-item__link {
     justify-content: space-between;
     justify-items: center;
     column-gap: 0;
-    grid-auto-rows: 46px;
+    grid-auto-rows: 25px;
     row-gap: 62px;
   }
 
@@ -2205,7 +2200,7 @@ button.social-item__link {
   .vendor-list--desktop {
     width: 435px;
     grid-template-columns: repeat(5, 34px);
-    grid-auto-rows: 24px;
+    grid-auto-rows: 14px;
     row-gap: 38px;
   }
 
