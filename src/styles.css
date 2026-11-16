@@ -987,6 +987,10 @@ button.social-item__link {
   background: #4a2b1d;
 }
 
+.food-item .vendor-swatch {
+  background: #000000;
+}
+
 .vendor-name {
   font-size: 11px;
   font-weight: 400;
@@ -1040,8 +1044,17 @@ button.social-item__link {
 }
 
 @media (max-width: 899px) {
-  .food-area {
-    display: none;
+  .food-list {
+    display: flex;
+    width: min(282px, 100%);
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 32px 34px;
+    margin-inline: auto;
+  }
+
+  .food-item {
+    width: 70px;
   }
 
   .venue__label--transport {
@@ -1786,7 +1799,6 @@ button.social-item__link {
   .food-item .vendor-swatch {
     width: 59px;
     height: 25px;
-  background: #000000;
   }
 
   .rule-divider {
