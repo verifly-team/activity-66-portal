@@ -18,6 +18,7 @@ import tabSpecialContents from "./assets/figma-2026-10/tab-special-contents.png"
 import ticketsCtaDesktop from "./assets/figma-2026-10/tickets-cta-desktop.png";
 import ticketsCtaMobile from "./assets/figma-2026-10/tickets-cta-mobile.png";
 import ticketQr from "./assets/figma-2026-10/ticket-qr.webp";
+import youfunLogo from "./assets/figma-2026-10/youfun-logo.webp";
 import { ArrowIcon } from "./ArrowIcon";
 import { VenueMap } from "./VenueMap";
 import { VENUE } from "./venue";
@@ -53,46 +54,23 @@ const fashionShows = [
   },
 ] as const;
 
-type Vendor = { name: string; lines?: readonly string[] };
+type Vendor = { name: string };
 
-const desktopVendors: readonly Vendor[] = [
-  { name: "Inner Archive" },
-  { name: "Full Moon" },
-  { name: "In Tatters" },
-  { name: "BUY 42" },
+const vendors: readonly Vendor[] = [
   { name: "不设季" },
-  { name: "Ballo Space" },
-  { name: "Timber Vintage" },
-  { name: "Past Vintage" },
-  { name: "世集卡牌" },
-  { name: "Past Vintage / 布雷德男士理发", lines: ["Past Vintage", "布雷德男士理发"] },
-  { name: "Farm" },
-  { name: "Swing Vintage" },
-  { name: "光荣二手" },
-  { name: "Zoom Ink" },
-  { name: "雅昌印刷" },
+  { name: "artISM" },
+  { name: "FUSE AXIS" },
+  { name: "Retro Project" },
+  { name: "云曦" },
+  { name: "fastroot 快根" },
+  { name: "Iris Vintage 伊蕊中古" },
+  { name: "mindmove 有空想" },
+  { name: "时光贩卖屋" },
+  { name: "潮土便利店" },
+  { name: "Kuno Works&Co." },
+  { name: "Taste of the future" },
+  { name: "闪闪亮复古老货" },
 ];
-
-const mobileVendors: readonly Vendor[] = [
-  { name: "Inner Archive" },
-  { name: "Daddy Farm" },
-  { name: "In Tatters" },
-  { name: "BUY 42" },
-  { name: "不设季" },
-  { name: "Ballo Space" },
-  { name: "Timber Vintage" },
-  { name: "Past Vintage" },
-  { name: "光荣二手" },
-  { name: "Full Moon" },
-  { name: "世集卡牌" },
-  { name: "Past Vintage / 布雷德男士理发", lines: ["Past Vintage", "布雷德男士理发"] },
-  { name: "Farm" },
-  { name: "Swing Vintage" },
-  { name: "Zoom Ink" },
-  { name: "雅昌印刷" },
-];
-
-const mobileVendorPreviewCount = 9;
 
 const foodItems = [
   "beko beko",
@@ -140,6 +118,7 @@ function VendorList({
       {items.map((item) => (
         <li className="vendor-item" key={item.name} aria-label={item.name}>
           <span className="vendor-swatch" aria-hidden="true" />
+          <span className="vendor-name">{item.name}</span>
         </li>
       ))}
     </ul>
@@ -281,7 +260,6 @@ function App() {
     playIntro ? "ready" : "complete",
   );
   const [wechatOpen, setWechatOpen] = useState(false);
-  const [vendorsExpanded, setVendorsExpanded] = useState(false);
   const wechatTriggerRef = useRef<HTMLButtonElement>(null);
   const wechatDialogRef = useRef<HTMLDivElement>(null);
 
@@ -354,10 +332,6 @@ function App() {
       trigger?.focus();
     };
   }, [wechatOpen]);
-
-  const visibleMobileVendors = vendorsExpanded
-    ? mobileVendors
-    : mobileVendors.slice(0, mobileVendorPreviewCount);
 
   const siteClassName = [
     "site",
@@ -545,22 +519,8 @@ function App() {
             </picture>
 
             <div className="vendors">
-              <VendorList
-                items={desktopVendors}
-                className="vendor-list--desktop"
-              />
-              <VendorList
-                items={visibleMobileVendors}
-                className="vendor-list--mobile"
-              />
-              <button
-                className="view-more"
-                type="button"
-                aria-expanded={vendorsExpanded}
-                onClick={() => setVendorsExpanded((value) => !value)}
-              >
-                {vendorsExpanded ? "收起 Less" : "More 查看更多"}
-              </button>
+              <VendorList items={vendors} className="vendor-list--desktop" />
+              <VendorList items={vendors} className="vendor-list--mobile" />
             </div>
 
             <div className="food-area">
@@ -704,6 +664,15 @@ function App() {
                 loading="lazy"
                 decoding="async"
                 alt="2nd STREET"
+              />
+              <img
+                className="support__logo support__logo--youfun"
+                src={youfunLogo}
+                width="1800"
+                height="468"
+                loading="lazy"
+                decoding="async"
+                alt="悠方 U Fun"
               />
               <img
                 className="support__logo support__logo--partner"
